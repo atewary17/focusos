@@ -1,0 +1,17 @@
+<header class="border-b border-stone-200 bg-white">
+  <nav class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+    <%= link_to root_path, class: "flex items-center gap-2 font-semibold tracking-tight text-stone-900" do %>
+      <span class="inline-block h-2.5 w-2.5 rounded-full bg-teal-600" aria-hidden="true"></span>
+      FocusOS
+    <% end %>
+
+    <div class="flex items-center gap-1 text-sm">
+      <%= link_to "Today", root_path,
+            class: "rounded-md px-3 py-1.5 #{current_page?(root_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
+      <%= link_to "Settings", account_path,
+            class: "rounded-md px-3 py-1.5 #{current_page?(account_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
+      <%= button_to "Sign out", session_path, method: :delete,
+            class: "cursor-pointer rounded-md px-3 py-1.5 text-stone-600 hover:text-stone-900" %>
+    </div>
+  </nav>
+</header>

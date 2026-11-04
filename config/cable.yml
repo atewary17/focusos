@@ -1,0 +1,10 @@
+# Async runs inside the Puma process. That is enough while the app runs as a
+# single Railway service; switch to solid_cable if you ever add replicas.
+development:
+  adapter: async
+
+test:
+  adapter: test
+
+production:
+  adapter: async

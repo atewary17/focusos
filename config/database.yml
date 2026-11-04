@@ -1,0 +1,20 @@
+# FocusOS uses one PostgreSQL database per environment.
+# Solid Queue's tables live in the primary database (see the
+# CreateSolidQueueTables migration), so Railway needs a single Postgres service.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("DB_POOL") { 10 } %>
+
+development:
+  <<: *default
+  database: focusos_development
+
+test:
+  <<: *default
+  database: focusos_test
+
+# On Railway, set DATABASE_URL to ${{Postgres.DATABASE_URL}}.
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>

@@ -1,0 +1,30 @@
+<% content_for :title, "Sign in" %>
+
+<div class="mx-auto w-full max-w-sm pt-6">
+  <div class="mb-8 text-center">
+    <span class="mx-auto mb-4 block h-3 w-3 rounded-full bg-teal-600" aria-hidden="true"></span>
+    <h1 class="text-2xl font-semibold tracking-tight">Sign in to FocusOS</h1>
+    <p class="mt-2 text-sm text-stone-500">Plan the day. Start small. See what you actually did.</p>
+  </div>
+
+  <%= form_with url: session_path, class: "space-y-4" do |form| %>
+    <div>
+      <%= form.label :email_address, "Email", class: label_classes %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username",
+            value: params[:email_address], class: input_classes %>
+    </div>
+
+    <div>
+      <%= form.label :password, class: label_classes %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password",
+            maxlength: 72, class: input_classes %>
+    </div>
+
+    <%= form.submit "Sign in", class: primary_button_classes %>
+  <% end %>
+
+  <div class="mt-6 flex justify-between text-sm">
+    <%= link_to "Forgot password?", new_password_path, class: "text-stone-500 hover:text-stone-800" %>
+    <%= link_to "Create an account", new_registration_path, class: "font-medium text-teal-700 hover:text-teal-900" %>
+  </div>
+</div>

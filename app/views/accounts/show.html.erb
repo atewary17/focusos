@@ -1,0 +1,54 @@
+<% content_for :title, "Settings" %>
+
+<h1 class="mb-8 text-2xl font-semibold tracking-tight">Settings</h1>
+
+<section class="mb-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+  <h2 class="mb-1 font-semibold">Profile</h2>
+  <p class="mb-5 text-sm text-stone-500">Signed in as <%= @user.email_address %></p>
+
+  <%= render "shared/form_errors", record: @user %>
+
+  <%= form_with model: @user, url: account_path, method: :patch, class: "space-y-4" do |form| %>
+    <div>
+      <%= form.label :name, "Your name", class: label_classes %>
+      <%= form.text_field :name, required: true, autocomplete: "name", class: input_classes %>
+    </div>
+
+    <div>
+      <%= form.label :time_zone, "Time zone", class: label_classes %>
+      <%= form.select :time_zone, options_for_select(User.time_zone_options, @user.time_zone), {}, class: input_classes %>
+    </div>
+
+    <fieldset class="space-y-4 border-t border-stone-100 pt-4">
+      <legend class="text-sm font-medium text-stone-700">Change password <span class="font-normal text-stone-400">(leave blank to keep it)</span></legend>
+      <div>
+        <%= form.label :password, "New password", class: label_classes %>
+        <%= form.password_field :password, minlength: 8, maxlength: 72, autocomplete: "new-password", class: input_classes %>
+      </div>
+      <div>
+        <%= form.label :password_confirmation, "Confirm new password", class: label_classes %>
+        <%= form.password_field :password_confirmation, maxlength: 72, autocomplete: "new-password", class: input_classes %>
+      </div>
+    </fieldset>
+
+    <div class="sm:w-48">
+      <%= form.submit "Save settings", class: primary_button_classes %>
+    </div>
+  <% end %>
+</section>
+
+<section class="rounded-2xl border border-red-200 bg-white p-6">
+  <h2 class="mb-1 font-semibold text-red-800">Delete account</h2>
+  <p class="mb-5 text-sm text-stone-600">
+    Permanently deletes your account and all your data. This cannot be undone.
+  </p>
+
+  <%= form_with url: account_path, method: :delete, class: "flex flex-col gap-3 sm:flex-row sm:items-end",
+        data: { turbo_confirm: "Delete your account and all data permanently?" } do |form| %>
+    <div class="sm:flex-1">
+      <%= form.label :password, "Confirm with your password", for: "delete_password", class: label_classes %>
+      <%= form.password_field :password, id: "delete_password", required: true, autocomplete: "current-password", class: input_classes %>
+    </div>
+    <%= form.submit "Delete my account", class: danger_button_classes %>
+  <% end %>
+</section>

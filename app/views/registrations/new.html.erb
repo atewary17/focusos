@@ -1,0 +1,64 @@
+<% content_for :title, "Create account" %>
+
+<div class="mx-auto w-full max-w-sm pt-6">
+  <div class="mb-8 text-center">
+    <span class="mx-auto mb-4 block h-3 w-3 rounded-full bg-teal-600" aria-hidden="true"></span>
+    <h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>
+    <p class="mt-2 text-sm text-stone-500">FocusOS is in private beta.</p>
+  </div>
+
+  <%= render "shared/form_errors", record: @user %>
+
+  <%= form_with model: @user, url: registration_path, class: "space-y-4" do |form| %>
+    <div>
+      <%= form.label :name, "Your name", class: label_classes %>
+      <%= form.text_field :name, required: true, autofocus: true, autocomplete: "name", class: input_classes %>
+    </div>
+
+    <div>
+      <%= form.label :email_address, "Email", class: label_classes %>
+      <%= form.email_field :email_address, required: true, autocomplete: "username", class: input_classes %>
+    </div>
+
+    <div>
+      <%= form.label :password, class: label_classes %>
+      <%= form.password_field :password, required: true, minlength: 8, maxlength: 72,
+            autocomplete: "new-password", class: input_classes %>
+      <p class="mt-1 text-xs text-stone-500">At least 8 characters.</p>
+    </div>
+
+    <div>
+      <%= form.label :password_confirmation, "Confirm password", class: label_classes %>
+      <%= form.password_field :password_confirmation, required: true, maxlength: 72,
+            autocomplete: "new-password", class: input_classes %>
+    </div>
+
+    <div>
+      <%= form.label :time_zone, "Time zone", class: label_classes %>
+      <%= form.select :time_zone, options_for_select(User.time_zone_options, @user.time_zone), {}, class: input_classes %>
+      <p class="mt-1 text-xs text-stone-500">Used to decide when your day starts and when reminders fire.</p>
+    </div>
+
+    <% if signup_requires_invite? %>
+      <div>
+        <%= label_tag :invite_code, "Invite code", class: label_classes %>
+        <%= text_field_tag :invite_code, params[:invite_code], required: true, autocomplete: "off", class: input_classes %>
+      </div>
+    <% end %>
+
+    <div class="flex items-start gap-3 rounded-lg border border-stone-200 bg-white p-3">
+      <%= form.check_box :terms_accepted, class: "mt-1 h-4 w-4 rounded border-stone-300 text-teal-700" %>
+      <%= form.label :terms_accepted, class: "text-sm leading-relaxed text-stone-600" do %>
+        I agree that FocusOS stores my plans and focus sessions, and later, only if I turn them on,
+        my app usage and watch health data, to show me my own reports. Nobody else sees my data,
+        and I can delete everything at any time from Settings.
+      <% end %>
+    </div>
+
+    <%= form.submit "Create account", class: primary_button_classes %>
+  <% end %>
+
+  <p class="mt-6 text-center text-sm text-stone-500">
+    Already have an account? <%= link_to "Sign in", new_session_path, class: "font-medium text-teal-700 hover:text-teal-900" %>
+  </p>
+</div>
