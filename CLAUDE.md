@@ -4,7 +4,8 @@ FocusOS helps a small group of students plan the day, start short focus sessions
 answer "are you focused?" check-ins, and compare what they planned with what they
 actually did (phone, laptop and watch data). Private beta: 2 Android users.
 
-Read `docs/plan.md` for the roadmap. Work one milestone at a time.
+Read `docs/plan.md` for the roadmap and `docs/HANDOFF.md` for decisions, data model and milestone criteria.
+API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one milestone at a time.
 
 ## Stack
 - Rails 8.1, Ruby 3.3, PostgreSQL, Hotwire (Turbo + Stimulus), importmap, Tailwind v4
