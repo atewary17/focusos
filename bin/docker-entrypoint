@@ -1,5 +1,17 @@
 #!/bin/bash -e
 
+# Print where this container runs and which required settings are missing
+# (names only, never values), so a misconfigured deploy is obvious in the logs.
+echo "FocusOS boot: service=${RAILWAY_SERVICE_NAME:-unknown} environment=${RAILWAY_ENVIRONMENT_NAME:-unknown} commit=${RAILWAY_GIT_COMMIT_SHA:0:7}"
+missing=()
+[ -n "$DATABASE_URL" ] || missing+=("DATABASE_URL")
+[ -n "$SECRET_KEY_BASE" ] || [ -n "$RAILS_MASTER_KEY" ] || missing+=("SECRET_KEY_BASE (or RAILS_MASTER_KEY)")
+if [ ${#missing[@]} -gt 0 ]; then
+  echo "FocusOS boot: missing variables: ${missing[*]}"
+  echo "FocusOS boot: add them to the service named above, in the environment named above, then redeploy."
+  exit 1
+fi
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
