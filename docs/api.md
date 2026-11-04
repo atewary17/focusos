@@ -1,5 +1,9 @@
 # FocusOS API v1 – contract
 
+> **Collector endpoints (sign-in, devices, phone usage, health): `docs/HANDOFF.md`
+> section 6A is authoritative** and replaces sections 2 and 4 below. This file
+> is rewritten with `curl` examples as part of milestone C1.
+
 Status: **design, not built.** Endpoints are implemented in the milestone named
 next to each section (see `docs/HANDOFF.md` §6). Change this file in the same PR
 when an endpoint's shape changes.

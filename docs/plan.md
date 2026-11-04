@@ -9,7 +9,17 @@ Rule: don't start a phase until the previous one is used daily.
 - [x] Settings: name, time zone, password; delete account with all data
 - [x] Today page shell, installable web app (PWA manifest)
 - [x] CLAUDE.md, CI (GitHub Actions), tests, RuboCop, Brakeman
-- [ ] Deploy to Railway and sign up both users
+- [x] Deploy to Railway
+- [ ] Both users sign up
+
+## Phase C – Android collector (pulled forward, see ADR 0002 and HANDOFF §6A)
+- [ ] C1 Rails ingest API: tokens, devices, upload endpoints, Settings → Devices, `/phone` page
+- [ ] C2 Android project + sign-in (repo `focusos-android`)
+- [ ] C3 Permissions onboarding: Usage access, Health Connect, battery exemption
+- [ ] C4 Usage collector: daily per-app totals, app sessions, screen events
+- [ ] C5 Health Connect collector: heart rate, sleep, SpO₂, steps (+ HRV if present)
+- [ ] C6 Hourly sync worker, status screen, signed APK on both phones
+- [ ] Dashboard with charts on collector data (ask before adding `chartkick`)
 
 ## Phase 1 – Planner and checklist (web)
 - [ ] Subjects and topics
@@ -28,10 +38,9 @@ Rule: don't start a phase until the previous one is used daily.
 - [ ] Notifications via browser push and ntfy until the Android app exists
 - **Gate:** both users use it daily for 2 weeks
 
-## Phase 3 – Android app (Kotlin)
-- [ ] Token API `/api/v1` in Rails (sign-in, check-ins, usage upload)
-- [ ] Login screen, Today view, start/stop session
-- [ ] Phone app usage via `UsageStatsManager`, uploaded hourly
+## Phase 3 – Android app: interaction features (sign-in and usage upload are in Phase C)
+- [ ] API for today, focus sessions and check-ins (reuses C1 token auth)
+- [ ] Today view, start/stop session
 - [ ] Native check-in notifications with action buttons (Firebase Cloud Messaging); watch mirrors them
 - [ ] Distribute by APK or Play internal testing
 
@@ -41,8 +50,7 @@ Rule: don't start a phase until the previous one is used daily.
 - [ ] Distraction time during planned study blocks
 
 ## Phase 5 – Watch data (Health Connect)
-- [ ] Read heart rate, sleep, SpO₂, steps in the Android app
-- [ ] Generic health samples table (accepts HRV from other watches)
+- Reading and uploading Health Connect data is done by the collector (C5)
 - [ ] Indicators: sleep duration and regularity, wake-to-first-session delay,
       resting HR trend, sedentary streaks, readiness score
 - [ ] Shown as "body context", never as a focus measurement
