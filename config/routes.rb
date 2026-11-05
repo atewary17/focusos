@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   # Signed-in user
   resource :account, only: %i[show update destroy]
   root "today#show"
+  resource :dashboard, only: :show
   resource :phone, only: :show, controller: "phone"
   namespace :settings do
     resources :devices, only: %i[index destroy]

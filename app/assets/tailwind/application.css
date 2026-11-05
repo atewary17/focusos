@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+/* Chart colors (validated palette, light mode; see app/helpers/charts_helper.rb).
+   Categorical slots are assigned in this fixed order, never by rank. */
+:root {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-other: #a3a19a;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  /* Sequential blue, near-zero to most */
+  --viz-seq-0: #f0efec;
+  --viz-seq-1: #cde2fb;
+  --viz-seq-2: #9ec5f4;
+  --viz-seq-3: #6da7ec;
+  --viz-seq-4: #3987e5;
+  --viz-seq-5: #1c5cab;
+}

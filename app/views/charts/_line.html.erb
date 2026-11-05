@@ -1,0 +1,97 @@
+<%# Single-series line chart with a 10% area wash, crosshair tooltip and a table view.
+    points:  [{ x: 0..1, value:, title:, gap: true if the line breaks before this point }] in x order
+    x_ticks: [[x 0..1, label], …] %>
+<%# locals: (points:, x_ticks:, value_format:, series_name:, caption:, focusable: true) %>
+<% plot = ChartsHelper::PLOT_HEIGHT %>
+<% low, high = points.map { |point| point[:value] }.minmax %>
+<% step = [ 5, 10, 20, 25, 50, 100 ].find { |candidate| candidate * 4 >= (high - low) + 10 } || 100 %>
+<% bottom = ((low - 5) / step.to_f).floor * step %>
+<% top = bottom + step * 4 %>
+<% top += step while top < high %>
+<% ticks = bottom.step(top, step).to_a %>
+<% y = ->(value) { (value - bottom) * 100.0 / (top - bottom) } %>
+<% segments = points.slice_before { |point| point[:gap] }.to_a %>
+<% path = ->(segment) { segment.map.with_index { |point, i| "#{i.zero? ? "M" : "L"}#{(point[:x] * 1000).round(1)},#{(100 - y.(point[:value])).round(2)}" }.join(" ") } %>
+
+<div class="relative" data-controller="chart" data-action="pointerleave->chart#hide">
+  <div class="flex">
+    <div class="relative w-10 shrink-0 text-right text-[11px] tabular-nums text-stone-500" style="height: <%= plot %>px" aria-hidden="true">
+      <% ticks.each do |tick| %>
+        <span class="absolute right-2 translate-y-1/2" style="bottom: <%= y.(tick) %>%"><%= tick %></span>
+      <% end %>
+    </div>
+
+    <div class="relative min-w-0 flex-1" style="height: <%= plot %>px">
+      <% ticks.each do |tick| %>
+        <div class="absolute inset-x-0 border-t" aria-hidden="true"
+             style="bottom: <%= y.(tick) %>%; border-color: var(<%= tick == bottom ? "--viz-axis" : "--viz-grid" %>)"></div>
+      <% end %>
+
+      <svg viewBox="0 0 1000 100" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+        <% segments.each do |segment| %>
+          <% next if segment.size < 2 %>
+          <path d="<%= path.(segment) %> L<%= (segment.last[:x] * 1000).round(1) %>,100 L<%= (segment.first[:x] * 1000).round(1) %>,100 Z"
+                fill="var(--viz-1)" fill-opacity="0.1" stroke="none" />
+          <path d="<%= path.(segment) %>" fill="none" stroke="var(--viz-1)" stroke-width="2"
+                stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+        <% end %>
+      </svg>
+
+      <%# End-dot on the latest point and on isolated points, with a 2px surface ring. %>
+      <% points.each_with_index do |point, index| %>
+        <% isolated = segments.any? { |segment| segment.size == 1 && segment.first.equal?(point) } %>
+        <% next unless isolated || index == points.size - 1 %>
+        <span class="pointer-events-none absolute h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full ring-2 ring-white" aria-hidden="true"
+              style="left: <%= point[:x] * 100 %>%; bottom: <%= y.(point[:value]) %>%; background: var(--viz-1)"></span>
+      <% end %>
+
+      <%# Hit areas: each point owns the span between its neighbours' midpoints. %>
+      <% points.each_with_index do |point, index| %>
+        <% left = index.zero? ? 0 : (points[index - 1][:x] + point[:x]) / 2.0 %>
+        <% right = index == points.size - 1 ? 1 : (point[:x] + points[index + 1][:x]) / 2.0 %>
+        <% width = [ right - left, 0.0001 ].max %>
+        <div class="group absolute inset-y-0 outline-none" style="left: <%= left * 100 %>%; width: <%= width * 100 %>%"
+             <% if focusable %>tabindex="0"<% end %> role="img" aria-label="<%= point[:title] %>: <%= value_format.call(point[:value]) %>"
+             data-tip-title="<%= point[:title] %>" data-tip-rows="<%= tip_rows([ [ series_name, value_format.call(point[:value]), "var(--viz-1)" ] ]) %>"
+             data-action="pointerenter->chart#show focus->chart#show blur->chart#hide">
+          <div class="absolute inset-y-0 hidden w-px bg-stone-400 group-hover:block group-focus-visible:block"
+               style="left: <%= (point[:x] - left) / width * 100 %>%"></div>
+          <span data-tip-anchor class="absolute" style="left: <%= (point[:x] - left) / width * 100 %>%; bottom: <%= y.(point[:value]) %>%"></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="relative ml-10 mt-1.5 h-4 text-[11px] text-stone-500" aria-hidden="true">
+    <% x_ticks.each do |x, label| %>
+      <span class="absolute whitespace-nowrap <%= x >= 0.95 ? "-translate-x-full" : (x <= 0.05 ? "" : "-translate-x-1/2") %>"
+            style="left: <%= x * 100 %>%"><%= label %></span>
+    <% end %>
+  </div>
+
+  <div data-chart-target="tooltip" hidden
+       class="pointer-events-none absolute z-10 min-w-32 rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs shadow-lg"></div>
+</div>
+
+<details class="mt-4 text-sm">
+  <summary class="cursor-pointer text-stone-500 hover:text-stone-800">Show as table</summary>
+  <div class="mt-2 max-h-72 overflow-auto">
+    <table class="w-full">
+      <caption class="sr-only"><%= caption %></caption>
+      <thead>
+        <tr class="text-left text-stone-500">
+          <th class="py-1.5 pr-4 font-medium">When</th>
+          <th class="py-1.5 text-right font-medium"><%= series_name %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <% points.reverse_each do |point| %>
+          <tr>
+            <td class="py-1.5 pr-4"><%= point[:title] %></td>
+            <td class="py-1.5 text-right tabular-nums"><%= value_format.call(point[:value]) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</details>

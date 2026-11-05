@@ -1,0 +1,93 @@
+<%# Stacked (or single-series) column chart with hover/focus tooltip and a table view.
+    columns: [{ title:, tick:, segments: [[series_key, value], …] }] oldest first
+    series:  { key => { name:, color: } } in stacking order, bottom first %>
+<%# locals: (columns:, series:, value_format:, axis_format:, caption:, steps: nil) %>
+<% plot = ChartsHelper::PLOT_HEIGHT %>
+<% totals = columns.map { |column| column[:segments].sum { |_key, value| value } } %>
+<% top, step = nice_scale(totals.max, steps: steps) %>
+<% ticks = 0.step(top, step).to_a %>
+
+<div class="relative" data-controller="chart" data-action="pointerleave->chart#hide">
+  <% if series.size > 1 %>
+    <ul class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+      <% series.each_value do |item| %>
+        <li class="flex items-center gap-1.5">
+          <span class="inline-block h-2.5 w-2.5 rounded-[2px]" style="background: <%= item[:color] %>"></span><%= item[:name] %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div class="flex">
+    <div class="relative w-10 shrink-0 text-right text-[11px] tabular-nums text-stone-500" style="height: <%= plot %>px" aria-hidden="true">
+      <% ticks.each do |tick| %>
+        <span class="absolute right-2 translate-y-1/2" style="bottom: <%= tick * 100.0 / top %>%"><%= axis_format.call(tick) %></span>
+      <% end %>
+    </div>
+
+    <div class="relative min-w-0 flex-1" style="height: <%= plot %>px">
+      <% ticks.each do |tick| %>
+        <div class="absolute inset-x-0 border-t" aria-hidden="true"
+             style="bottom: <%= tick * 100.0 / top %>%; border-color: var(<%= tick.zero? ? "--viz-axis" : "--viz-grid" %>)"></div>
+      <% end %>
+
+      <div class="absolute inset-0 flex items-end">
+        <% columns.each_with_index do |column, index| %>
+          <% visible = column[:segments].select { |_key, value| value.to_f.positive? } %>
+          <% rows = column[:segments].map { |key, value| [ series[key][:name], value_format.call(value), series[key][:color] ] } %>
+          <% rows << [ "Total", value_format.call(totals[index]), nil ] if series.size > 1 %>
+          <div tabindex="0" role="img" aria-label="<%= column[:title] %>: <%= rows.map { |name, value, _| "#{name} #{value}" }.join(", ") %>"
+               class="group flex h-full min-w-0 flex-1 items-end justify-center px-px outline-none focus-visible:bg-stone-100"
+               data-tip-title="<%= column[:title] %>" data-tip-rows="<%= tip_rows(rows) %>"
+               data-action="pointerenter->chart#show focus->chart#show blur->chart#hide">
+            <div data-tip-anchor class="flex w-full max-w-6 flex-col-reverse gap-[2px] group-hover:opacity-75 group-focus-visible:opacity-75">
+              <% visible.each_with_index do |(key, value), position| %>
+                <% height = [ value.to_f / top * plot - (position.zero? ? 0 : 2), 1 ].max %>
+                <div class="w-full <%= "rounded-t-[4px]" if position == visible.size - 1 %>"
+                     style="height: <%= height.round(1) %>px; background: <%= series[key][:color] %>"></div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="ml-10 mt-1.5 flex text-[11px] text-stone-500" aria-hidden="true">
+    <% columns.each_with_index do |column, index| %>
+      <span class="flex min-w-0 flex-1 justify-center whitespace-nowrap"><%= column[:tick] if show_tick?(index, columns.size) %></span>
+    <% end %>
+  </div>
+
+  <div data-chart-target="tooltip" hidden
+       class="pointer-events-none absolute z-10 min-w-32 rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs shadow-lg"></div>
+</div>
+
+<details class="mt-4 text-sm">
+  <summary class="cursor-pointer text-stone-500 hover:text-stone-800">Show as table</summary>
+  <div class="mt-2 overflow-x-auto">
+    <table class="w-full min-w-max">
+      <caption class="sr-only"><%= caption %></caption>
+      <thead>
+        <tr class="text-left text-stone-500">
+          <th class="py-1.5 pr-4 font-medium">Day</th>
+          <% series.each_value do |item| %>
+            <th class="px-2 py-1.5 text-right font-medium"><%= item[:name] %></th>
+          <% end %>
+          <% if series.size > 1 %><th class="pl-2 py-1.5 text-right font-medium">Total</th><% end %>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <% columns.each_with_index.reverse_each do |column, index| %>
+          <tr>
+            <td class="py-1.5 pr-4"><%= column[:title] %></td>
+            <% column[:segments].each do |_key, value| %>
+              <td class="px-2 py-1.5 text-right tabular-nums"><%= value_format.call(value) %></td>
+            <% end %>
+            <% if series.size > 1 %><td class="pl-2 py-1.5 text-right tabular-nums font-medium"><%= value_format.call(totals[index]) %></td><% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</details>

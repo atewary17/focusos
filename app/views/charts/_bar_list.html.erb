@@ -1,0 +1,17 @@
+<%# Ranked horizontal bars, one series, value at each bar's tip.
+    items: [{ label:, title:, value:, display: }] largest first %>
+<%# locals: (items:) %>
+<% max = items.map { |item| item[:value] }.max.to_f %>
+
+<ul class="space-y-2.5">
+  <% items.each do |item| %>
+    <li class="grid items-center gap-3 text-sm" style="grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr)">
+      <span class="truncate text-stone-700" title="<%= item[:title] %>"><%= item[:label] %></span>
+      <span class="flex min-w-0 items-center gap-2">
+        <span class="block h-3 shrink-0 rounded-r-[4px]"
+              style="width: calc((100% - 4.5rem) * <%= max.positive? ? (item[:value] / max).round(4) : 0 %>); background: var(--viz-1)"></span>
+        <span class="shrink-0 text-xs tabular-nums text-stone-600"><%= item[:display] %></span>
+      </span>
+    </li>
+  <% end %>
+</ul>

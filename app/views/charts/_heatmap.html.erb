@@ -1,0 +1,65 @@
+<%# Day × hour heatmap of minutes, one sequential hue, with a scale legend and table view.
+    grid: { date => [minutes for hours 0..23] } oldest first %>
+<%# locals: (grid:, caption:) %>
+<% cell_height = grid.size > 10 ? "h-2.5" : "h-4" %>
+
+<div class="relative" data-controller="chart" data-action="pointerleave->chart#hide">
+  <div class="grid gap-[2px]" style="grid-template-columns: 3rem repeat(24, minmax(0, 1fr))">
+    <% grid.each do |date, hours| %>
+      <div class="pr-1.5 text-right text-[11px] leading-none whitespace-nowrap text-stone-500 <%= grid.size > 10 ? "" : "self-center" %>">
+        <%= chart_date(date) if grid.size <= 10 || date.monday? || date == Date.current %>
+      </div>
+      <% hours.each_with_index do |minutes, hour| %>
+        <div class="<%= cell_height %> rounded-[2px] hover:outline-2 hover:outline-stone-900/50" style="background: <%= heat_color(minutes) %>"
+             data-tip-title="<%= chart_date(date) %>, <%= hour_label(hour) %>–<%= hour_label((hour + 1) % 24) %>"
+             data-tip-rows="<%= tip_rows([ [ "on apps", duration_label(minutes), nil ] ]) %>"
+             data-action="pointerenter->chart#show"></div>
+      <% end %>
+    <% end %>
+
+    <div></div>
+    <% 24.times do |hour| %>
+      <div class="relative h-4 text-[11px] text-stone-500" aria-hidden="true">
+        <% if (hour % 6).zero? %><span class="absolute left-0 top-1 whitespace-nowrap"><%= hour_label(hour) %></span><% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-stone-500">
+    <span>Minutes in the hour:</span>
+    <% labels = [ "0" ] + ChartsHelper::HEAT_STEPS.each_cons(2).map { |a, b| "#{a + 1}–#{b}" }.unshift("1–#{ChartsHelper::HEAT_STEPS.first}") %>
+    <% labels.each_with_index do |label, level| %>
+      <span class="flex items-center gap-1">
+        <span class="inline-block h-3 w-3 rounded-[2px]" style="background: var(--viz-seq-<%= level %>)"></span><%= label %>
+      </span>
+    <% end %>
+  </div>
+
+  <div data-chart-target="tooltip" hidden
+       class="pointer-events-none absolute z-10 min-w-32 rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs shadow-lg"></div>
+</div>
+
+<details class="mt-4 text-sm">
+  <summary class="cursor-pointer text-stone-500 hover:text-stone-800">Show as table</summary>
+  <div class="mt-2 overflow-x-auto">
+    <table class="min-w-max text-xs">
+      <caption class="sr-only"><%= caption %></caption>
+      <thead>
+        <tr class="text-stone-500">
+          <th class="py-1 pr-3 text-left font-medium">Day</th>
+          <% 24.times do |hour| %><th class="px-1 py-1 text-right font-medium"><%= hour_label(hour) %></th><% end %>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <% grid.to_a.reverse_each do |date, hours| %>
+          <tr>
+            <td class="py-1 pr-3"><%= chart_date(date) %></td>
+            <% hours.each do |minutes| %>
+              <td class="px-1 py-1 text-right tabular-nums <%= "text-stone-300" if minutes.zero? %>"><%= minutes %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</details>

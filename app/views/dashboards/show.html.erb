@@ -1,0 +1,184 @@
+<% content_for :title, "Dashboard" %>
+<% d = @dashboard %>
+<% card = "mb-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm" %>
+<% minutes = ->(value) { duration_label(value) } %>
+<% number = ->(value) { number_with_delimiter(value.to_i) } %>
+<% ticks_for = ->(date) { d.days == 7 ? chart_date(date) : date.strftime("%-d %b") } %>
+<% title_for = ->(date) { date == Date.current ? "Today, #{date.strftime("%-d %b")}" : date.strftime("%A, %-d %b") } %>
+
+<div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">Dashboard</h1>
+    <p class="mt-1 text-sm text-stone-500">
+      <% if (device = d.last_sync) %>
+        From <%= device.name %>, last synced <%= time_ago_in_words(device.last_sync_at) %> ago.
+      <% else %>
+        Phone and watch data from the FocusOS Android app.
+      <% end %>
+    </p>
+  </div>
+
+  <%# Range filter: one row, above everything it scopes. %>
+  <nav class="flex rounded-lg border border-stone-200 bg-white p-0.5 text-sm" aria-label="Date range">
+    <% Dashboard::RANGES.each do |days| %>
+      <%= link_to "#{days} days", dashboard_path(days: days),
+            class: "rounded-md px-3 py-1.5 #{d.days == days ? "bg-stone-900 font-medium text-white" : "text-stone-600 hover:bg-stone-100"}",
+            aria: { current: (d.days == days ? "page" : nil) } %>
+    <% end %>
+  </nav>
+</div>
+
+<% unless d.any_data? %>
+  <section class="<%= card %>">
+    <p class="font-medium">No phone connected yet.</p>
+    <p class="mt-1 text-sm text-stone-500">
+      Install the FocusOS Android app and sign in. Screen time, pickups, sleep, heart rate and steps appear here after its first sync.
+    </p>
+  </section>
+<% else %>
+  <% today = d.today %>
+  <% screen_today = d.screen_minutes(today) %>
+  <% average = d.average_screen_minutes %>
+  <% night = d.sleep_by_night[today] %>
+  <% heart = d.heart_rate_by_day[today] %>
+  <% spo2 = d.spo2_last_24_hours %>
+
+  <%# Headline: the one number the page leads with, then supporting tiles. %>
+  <section class="<%= card %>">
+    <p class="text-sm text-stone-500">App time today</p>
+    <p class="mt-1 text-5xl font-semibold tracking-tight"><%= duration_label(screen_today) %></p>
+    <p class="mt-2 text-sm text-stone-500">
+      <% if average %>
+        Your daily average over the previous <%= d.days - 1 %> days is <%= duration_label(average) %>.
+      <% else %>
+        Averages appear once there is more than one day of data.
+      <% end %>
+      Excludes the home screen and system UI.
+    </p>
+  </section>
+
+  <section class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <% tiles = [
+         [ "Instagram today", duration_label(d.app_minutes_by_day[today][:instagram]), "includes DMs" ],
+         [ "YouTube today", duration_label(d.app_minutes_by_day[today][:youtube]), "includes lectures" ],
+         [ "Pickups today", number.(d.pickups_by_day[today]), "screen unlocks" ],
+         [ "Sleep last night", night ? duration_label(night[:asleep_minutes]) : "–",
+           night ? "#{night[:bedtime].in_time_zone.strftime("%-l:%M%P")} – #{night[:wake].in_time_zone.strftime("%-l:%M%P")}" : "no sleep recorded" ],
+         [ "Steps today", number.(d.steps_by_day[today]), "from Health Connect" ],
+         [ "Lowest heart rate today", heart ? "#{heart[:low]} bpm" : "–", heart ? "average #{heart[:average]} bpm" : "no readings" ],
+         [ "SpO₂, last 24 hours", spo2 ? "#{spo2[:average]}%" : "–", spo2 ? "lowest #{spo2[:low]}%" : "no readings" ]
+       ] %>
+    <% tiles.each do |label, value, note| %>
+      <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm <%= "col-span-2 sm:col-span-1" if tiles.size.odd? && label == tiles.last.first %>">
+        <p class="text-xs text-stone-500"><%= label %></p>
+        <p class="mt-1 text-xl font-semibold"><%= value %></p>
+        <p class="mt-0.5 text-xs text-stone-400"><%= note %></p>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ---------------------------------------------------------------- phone %>
+  <section class="<%= card %>">
+    <h2 class="font-semibold">App time per day</h2>
+    <p class="mb-4 text-sm text-stone-500">Minutes in the foreground. Time is per app, not per screen.</p>
+    <%= render "charts/columns", caption: "App time per day", value_format: minutes, axis_format: ->(tick) { axis_duration(tick) },
+          steps: ChartsHelper::MINUTE_STEPS,
+          series: { instagram: { name: "Instagram", color: "var(--viz-1)" },
+                    youtube: { name: "YouTube", color: "var(--viz-2)" },
+                    other: { name: "Other apps", color: "var(--viz-other)" } },
+          columns: d.dates.map { |date| { title: title_for.(date), tick: ticks_for.(date),
+                                          segments: d.app_minutes_by_day[date].to_a } } %>
+  </section>
+
+  <section class="<%= card %>">
+    <h2 class="font-semibold">When you use your phone</h2>
+    <p class="mb-4 text-sm text-stone-500">Minutes on apps in each hour of the day.</p>
+    <%= render "charts/heatmap", grid: d.hourly_minutes, caption: "Minutes on apps per hour" %>
+  </section>
+
+  <div class="grid gap-x-6 sm:grid-cols-2">
+    <section class="<%= card %>">
+      <h2 class="font-semibold">Top apps</h2>
+      <p class="mb-4 text-sm text-stone-500">Total over the last <%= d.days %> days.</p>
+      <% apps = d.top_apps %>
+      <% if apps.any? %>
+        <%= render "charts/bar_list", items: apps.map { |app| { label: app[:label], title: app[:package_name], value: app[:minutes], display: duration_label(app[:minutes]) } } %>
+      <% else %>
+        <p class="text-sm text-stone-500">No app usage in this range yet.</p>
+      <% end %>
+      <p class="mt-4 text-sm"><%= link_to "Daily numbers per app →", phone_path, class: "text-teal-700 hover:text-teal-900" %></p>
+    </section>
+
+    <section class="<%= card %>">
+      <h2 class="font-semibold">Pickups per day</h2>
+      <p class="mb-4 text-sm text-stone-500">How often the screen was unlocked.</p>
+      <%= render "charts/columns", caption: "Pickups per day", value_format: number, axis_format: number,
+            series: { pickups: { name: "Pickups", color: "var(--viz-1)" } },
+            columns: d.dates.map { |date| { title: title_for.(date), tick: ticks_for.(date), segments: [ [ :pickups, d.pickups_by_day[date] ] ] } } %>
+    </section>
+  </div>
+
+  <%# ---------------------------------------------------------------- body %>
+  <h2 class="mb-1 mt-2 text-lg font-semibold tracking-tight">Body context</h2>
+  <p class="mb-4 text-sm text-stone-500">From your watch via Health Connect. These describe your body, not your focus.</p>
+
+  <section class="<%= card %>">
+    <h2 class="font-semibold">Sleep</h2>
+    <p class="mb-4 text-sm text-stone-500">Time in each stage, by the day you woke up. Nights without stage data show as "asleep, no stage".</p>
+    <% if d.sleep_by_night.any? %>
+      <%= render "charts/columns", caption: "Sleep per night", value_format: minutes, axis_format: ->(tick) { axis_duration(tick) },
+            steps: ChartsHelper::MINUTE_STEPS,
+            series: Dashboard::SLEEP_GROUPS.each_with_index.to_h { |(key, name), index| [ key, { name: name, color: "var(--viz-#{index + 1})" } ] },
+            columns: d.dates.map { |date| { title: title_for.(date), tick: ticks_for.(date),
+                                            segments: Dashboard::SLEEP_GROUPS.keys.map { |key| [ key, d.sleep_by_night.dig(date, :minutes, key).to_i ] } } } %>
+    <% else %>
+      <p class="text-sm text-stone-500">No sleep recorded in this range. Turn on sleep tracking and Health Connect sync in the Nothing X app.</p>
+    <% end %>
+  </section>
+
+  <section class="<%= card %>">
+    <h2 class="font-semibold">Heart rate, last 24 hours</h2>
+    <p class="mb-4 text-sm text-stone-500">Average beats per minute in each 15 minutes. Gaps mean the watch recorded nothing.</p>
+    <% readings = d.heart_rate_last_24_hours %>
+    <% if readings.size > 1 %>
+      <% now = Time.current %>
+      <% x = ->(time) { 1 - (now - time) / 24.hours } %>
+      <%= render "charts/line", caption: "Heart rate, last 24 hours", series_name: "bpm", value_format: ->(value) { "#{value} bpm" },
+            focusable: false,
+            x_ticks: [ 24, 18, 12, 6 ].map { |hours| [ 1 - hours / 24.0, (now - hours.hours).strftime("%-l%P") ] } + [ [ 1, "now" ] ],
+            points: readings.each_with_index.map { |(time, bpm), index|
+              { x: x.(time), value: bpm, title: time.strftime("%a %-l:%M%P"),
+                gap: index.positive? && time - readings[index - 1].first > 45.minutes } } %>
+    <% else %>
+      <p class="text-sm text-stone-500">Not enough heart-rate readings in the last 24 hours.</p>
+    <% end %>
+  </section>
+
+  <div class="grid gap-x-6 sm:grid-cols-2">
+    <section class="<%= card %>">
+      <h2 class="font-semibold">Lowest heart rate per day</h2>
+      <p class="mb-4 text-sm text-stone-500">The lowest reading each day, a rough stand-in for resting heart rate.</p>
+      <% lows = d.dates.filter_map { |date| [ date, d.heart_rate_by_day[date][:low] ] if d.heart_rate_by_day[date] } %>
+      <% if lows.size > 1 %>
+        <% span = (d.dates.last - d.dates.first).to_f %>
+        <% position = ->(date) { span.zero? ? 1.0 : (date - d.dates.first) / span } %>
+        <%= render "charts/line", caption: "Lowest heart rate per day", series_name: "lowest bpm", value_format: ->(value) { "#{value} bpm" },
+              x_ticks: [ [ 0, ticks_for.(d.dates.first) ], [ 1, ticks_for.(d.dates.last) ] ],
+              points: lows.each_with_index.map { |(date, low), index|
+                { x: position.(date), value: low, title: title_for.(date),
+                  gap: index.positive? && date - lows[index - 1].first > 1 } } %>
+      <% else %>
+        <p class="text-sm text-stone-500">Needs heart-rate readings on at least two days.</p>
+      <% end %>
+    </section>
+
+    <section class="<%= card %>">
+      <h2 class="font-semibold">Steps per day</h2>
+      <p class="mb-4 text-sm text-stone-500">Total steps recorded by the watch.</p>
+      <%= render "charts/columns", caption: "Steps per day", value_format: number,
+            axis_format: ->(tick) { tick >= 1000 ? "#{(tick / 1000.0).round(1).to_s.delete_suffix(".0")}k" : tick.to_s },
+            series: { steps: { name: "Steps", color: "var(--viz-1)" } },
+            columns: d.dates.map { |date| { title: title_for.(date), tick: ticks_for.(date), segments: [ [ :steps, d.steps_by_day[date] ] ] } } %>
+    </section>
+  </div>
+<% end %>

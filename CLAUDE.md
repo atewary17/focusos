@@ -63,3 +63,11 @@ API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one mileston
 `DATABASE_URL`, `SECRET_KEY_BASE`, `SOLID_QUEUE_IN_PUMA=true`, `APP_HOST`,
 `SIGNUP_INVITE_CODE` (optional; restricts sign-up to people with the code),
 `ANDROID_MIN_APP_VERSION` (optional; default `0.1.0`, returned by the device heartbeat).
+
+## Charts (dashboard)
+- Server-rendered, no chart gem: partials in `app/views/charts/` (`_columns`, `_line`,
+  `_heatmap`, `_bar_list`), helpers in `ChartsHelper`, tooltip in `chart_controller.js`.
+- Colors are CSS variables (`--viz-*`) in `app/assets/tailwind/application.css`, from a
+  colour-blind-validated palette. Assign series slots in fixed order, never by rank.
+- Every chart has a legend (2+ series), a hover/focus tooltip and a "Show as table" view.
+- Numbers come from `Dashboard` (app/models/dashboard.rb), computed in the user's time zone.
