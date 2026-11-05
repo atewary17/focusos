@@ -2,7 +2,6 @@
 # user's time zone. Every figure is a plain sum, count, average or minimum, so
 # each one can be explained in one sentence on the page.
 class Dashboard
-  RANGES = [ 7, 30 ].freeze
   INSTAGRAM = "com.instagram.android".freeze
   YOUTUBE = "com.google.android.youtube".freeze
   # Android counts the home screen and system UI as foreground time; they aren't app use.
@@ -17,9 +16,10 @@ class Dashboard
 
   attr_reader :days, :dates, :today
 
-  def initialize(user, days: RANGES.first, today: Date.current)
+  # Covers the whole retention window; older data no longer exists.
+  def initialize(user, today: Date.current)
     @user = user
-    @days = RANGES.include?(days) ? days : RANGES.first
+    @days = DataRetention::DAYS
     @today = today
     @dates = ((today - (@days - 1))..today).to_a
   end

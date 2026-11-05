@@ -3,7 +3,7 @@
 <% card = "mb-6 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm" %>
 <% minutes = ->(value) { duration_label(value) } %>
 <% number = ->(value) { number_with_delimiter(value.to_i) } %>
-<% ticks_for = ->(date) { d.days == 7 ? chart_date(date) : date.strftime("%-d %b") } %>
+<% ticks_for = ->(date) { d.days <= 7 ? chart_date(date) : date.strftime("%-d %b") } %>
 <% title_for = ->(date) { date == Date.current ? "Today, #{date.strftime("%-d %b")}" : date.strftime("%A, %-d %b") } %>
 
 <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -15,17 +15,9 @@
       <% else %>
         Phone and watch data from the FocusOS Android app.
       <% end %>
+      Showing the last <%= d.days %> days; older data is deleted automatically.
     </p>
   </div>
-
-  <%# Range filter: one row, above everything it scopes. %>
-  <nav class="flex rounded-lg border border-stone-200 bg-white p-0.5 text-sm" aria-label="Date range">
-    <% Dashboard::RANGES.each do |days| %>
-      <%= link_to "#{days} days", dashboard_path(days: days),
-            class: "rounded-md px-3 py-1.5 #{d.days == days ? "bg-stone-900 font-medium text-white" : "text-stone-600 hover:bg-stone-100"}",
-            aria: { current: (d.days == days ? "page" : nil) } %>
-    <% end %>
-  </nav>
 </div>
 
 <% unless d.any_data? %>

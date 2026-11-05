@@ -14,10 +14,11 @@ class DashboardTest < ActiveSupport::TestCase
     AppUsageDay.create!(**@owner, date: date, package_name: package, foreground_seconds: seconds, launches: 1)
   end
 
-  test "only 7 and 30 day ranges are allowed" do
-    assert_equal 7, Dashboard.new(@user, days: 0).days
-    assert_equal 30, Dashboard.new(@user, days: 30).days
-    assert_equal 7, Dashboard.new(@user, days: 999).dates.size
+  test "covers the retention window, ending today" do
+    dates = Dashboard.new(@user).dates
+
+    assert_equal DataRetention::DAYS, dates.size
+    assert_equal Date.current, dates.last
   end
 
   test "splits app time into Instagram, YouTube and other apps, without the launcher" do

@@ -34,6 +34,22 @@ class Api::V1::UploadsTest < ActionDispatch::IntegrationTest
     assert_equal 4000, AppUsageDay.sole.foreground_seconds
   end
 
+  test "skips items older than the retention window" do
+    api_post api_v1_app_usage_days_path, { items: [ usage_item, usage_item(date: (Date.current - DataRetention::DAYS).iso8601) ] }
+
+    assert_response :success
+    assert_equal({ "upserted" => 1, "skipped" => 1 }, response.parsed_body)
+    assert_equal [ Date.current ], AppUsageDay.pluck(:date)
+  end
+
+  test "a batch of only stale items succeeds without saving anything" do
+    api_post api_v1_screen_events_path, { items: [ { kind: "unlock", occurred_at: 30.days.ago.utc.iso8601 } ] }
+
+    assert_response :success
+    assert_equal({ "upserted" => 0, "skipped" => 1 }, response.parsed_body)
+    assert_equal 0, ScreenEvent.count
+  end
+
   test "keeps the last of duplicate items in one batch" do
     api_post api_v1_app_usage_days_path, { items: [ usage_item(foreground_seconds: 10), usage_item(foreground_seconds: 20) ] }
 

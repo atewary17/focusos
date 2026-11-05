@@ -49,6 +49,8 @@ API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one mileston
 - Upload endpoints use the `BatchUpload` concern: validate every item, then
   `upsert_all` on the model's `UPSERT_KEY`; all-or-nothing per request.
 - Collected-data models include `CollectedData` and define `UPSERT_KEY` and `UPLOAD_ATTRIBUTES`.
+- Retention: `DataRetention` (7 days by default) decides what is stale; a new collected-data
+  table must be added to `DataRetention::COLUMNS` so `PurgeStaleDataJob` cleans it.
 - API request tests use `api_post(path, params, token:)` with tokens from `test/fixtures/api_tokens.yml`.
 
 ## Layout (planned modules)
@@ -62,7 +64,8 @@ API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one mileston
 ## Environment variables (production)
 `DATABASE_URL`, `SECRET_KEY_BASE`, `SOLID_QUEUE_IN_PUMA=true`, `APP_HOST`,
 `SIGNUP_INVITE_CODE` (optional; restricts sign-up to people with the code),
-`ANDROID_MIN_APP_VERSION` (optional; default `0.1.0`, returned by the device heartbeat).
+`ANDROID_MIN_APP_VERSION` (optional; default `0.1.0`, returned by the device heartbeat),
+`DATA_RETENTION_DAYS` (optional; default `7`, days of phone/watch data kept, see ADR 0003).
 
 ## Charts (dashboard)
 - Server-rendered, no chart gem: partials in `app/views/charts/` (`_columns`, `_line`,

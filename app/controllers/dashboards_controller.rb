@@ -1,5 +1,5 @@
 class DashboardsController < ApplicationController
   def show
-    @dashboard = Dashboard.new(Current.user, days: params[:days].to_i)
+    @dashboard = Dashboard.new(Current.user)
   end
 end

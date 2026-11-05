@@ -396,12 +396,13 @@ Exclude FocusOS itself and launcher/system UI packages from sessions (keep in da
 1. Check token and permissions; record permission state for the status call.
 2. **Usage:** from `usage_cursor` (default: 7 days ago) to now → build daily totals for each
    affected local date, sessions, screen events → upload in batches of ≤ 500 items.
-3. **Health:** for each type, from its cursor (default: 30 days ago) → read pages → upload.
+3. **Health:** for each type, from its cursor (default: 7 days ago, the server's retention window) → read pages → upload.
 4. Advance each cursor **only after** the server confirms the batch (HTTP 200/201).
 5. `POST /api/v1/devices/heartbeat` with app version, permissions and a summary.
 6. On failure: exponential backoff (WorkManager), keep cursors, show the error on Status.
 
 All uploads are **idempotent**: re-sending the same data updates rather than duplicates.
+The server keeps only the last 7 days (ADR 0003) and answers older items with `skipped`; advance cursors past them.
 
 ### Rails ingest API (C1)
 
@@ -582,7 +583,7 @@ items in the same batch are **not** saved (all-or-nothing per request, in a tran
 | Instagram/YouTube time is app-level only | Say so in the UI; don't claim Reels/Shorts precision |
 | CMF watch misses notifications | Phone is the primary channel; watch is a bonus |
 | Health data misinterpreted | Label as body context; explain each indicator; no focus claims |
-| Railway cost creep | Check usage weekly; prune raw events after 90 days |
+| Railway cost creep | Check usage weekly; collected data is kept for 7 days (ADR 0003) |
 | Privacy of friend's data | Consent, delete-all, no raw payload logging, invite-only sign-up |
 
 ---

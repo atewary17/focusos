@@ -25,12 +25,12 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller=chart]", minimum: 4
   end
 
-  test "renders the 30 day range" do
+  test "says how many days are kept" do
     sign_in users(:one)
-    get dashboard_path(days: 30)
+    get dashboard_path
 
     assert_response :success
-    assert_select "a[aria-current=page]", "30 days"
+    assert_select "p", text: /Showing the last #{DataRetention::DAYS} days/
   end
 
   test "shows another user's numbers to nobody else" do

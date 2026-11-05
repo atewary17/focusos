@@ -19,7 +19,11 @@ module BatchUpload
         model.new(item.to_h.merge(user: Current.user, device: Current.device))
       end
 
-      invalid = records.each_with_index.filter_map do |record, index|
+      # Items older than the retention window would be deleted within the hour,
+      # so they are skipped (and count as accepted) instead of stored.
+      fresh = records.each_with_index.reject { |record, _index| DataRetention.stale?(record) }
+
+      invalid = fresh.filter_map do |record, index|
         { index: index, errors: record.errors.full_messages } if record.invalid?
       end
       if invalid.any?
@@ -29,9 +33,9 @@ module BatchUpload
 
       # Postgres rejects an upsert that touches the same row twice, so keep the
       # last item for each key.
-      rows = records.index_by(&:upsert_key).values.map(&:upsert_row)
-      model.transaction { model.upsert_all(rows, unique_by: model::UPSERT_KEY) }
+      rows = fresh.map(&:first).index_by(&:upsert_key).values.map(&:upsert_row)
+      model.transaction { model.upsert_all(rows, unique_by: model::UPSERT_KEY) } if rows.any?
 
-      render json: { upserted: rows.size }
+      render json: { upserted: rows.size, skipped: records.size - fresh.size }
     end
 end

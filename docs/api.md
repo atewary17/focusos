@@ -30,7 +30,7 @@ Sending the same item again updates the stored row instead of adding a new one,
 so the app can safely retry and re-send today's totals every hour. If one batch
 contains the same key twice, the last one wins.
 
-**Uploads are all-or-nothing.** If any item is invalid, nothing in that request
+**Uploads are all-or-nothing.** If any (non-skipped) item is invalid, nothing in that request
 is saved and the response lists the bad items by index.
 
 **Scoping.** Every row is stored for the token's user and device. Another user's
@@ -124,7 +124,12 @@ curl -s -X POST $FOCUSOS/devices/heartbeat -H "Authorization: Bearer $TOKEN" \
 
 ## Uploads
 
-All five return `200 { "upserted": <number of rows written> }`.
+All five return `200 { "upserted": <rows written>, "skipped": <items older than the retention window> }`.
+
+**Retention:** the server keeps only the last 7 local days of collected data
+(`DATA_RETENTION_DAYS`; see `docs/adr/0003-seven-day-retention.md`). Older items in an
+upload are skipped: not stored and not errors, so the app should still advance its
+cursor past them. Rows that age out are deleted by an hourly job.
 
 ### `POST /app_usage_days` – per-app daily totals
 
