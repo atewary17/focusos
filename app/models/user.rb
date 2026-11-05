@@ -4,6 +4,16 @@ class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
 
+  # Collected data first, so its rows are gone before the devices they reference.
+  # delete_all: these tables can hold many rows and have no callbacks.
+  has_many :app_usage_days, dependent: :delete_all
+  has_many :app_sessions, dependent: :delete_all
+  has_many :screen_events, dependent: :delete_all
+  has_many :health_samples, dependent: :delete_all
+  has_many :sleep_sessions, dependent: :delete_all
+  has_many :api_tokens, dependent: :destroy
+  has_many :devices, dependent: :destroy
+
   # Virtual checkbox on the sign-up form; the timestamp is what we store.
   attribute :terms_accepted, :boolean
 

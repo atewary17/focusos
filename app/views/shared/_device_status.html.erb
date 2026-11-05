@@ -1,0 +1,20 @@
+<%# Last sync and permissions reported by the app's heartbeat. %>
+<% permissions = device.permissions || {} %>
+<dl class="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+  <div class="flex justify-between gap-3 sm:block">
+    <dt class="text-stone-500">Last sync</dt>
+    <dd><%= device.last_sync_at ? "#{time_ago_in_words(device.last_sync_at)} ago" : "Never" %></dd>
+  </div>
+  <div class="flex justify-between gap-3 sm:block">
+    <dt class="text-stone-500">Usage access</dt>
+    <dd><%= permissions["usage_access"] ? "Granted" : "Not granted" %></dd>
+  </div>
+  <div class="flex justify-between gap-3 sm:block">
+    <dt class="text-stone-500">Health Connect</dt>
+    <dd><%= Array(permissions["health_connect"]).presence&.map(&:humanize)&.join(", ") || "Not granted" %></dd>
+  </div>
+  <div class="flex justify-between gap-3 sm:block">
+    <dt class="text-stone-500">Battery optimisation</dt>
+    <dd><%= permissions["battery_exempt"] ? "Exempt" : "Not exempt (syncs may be delayed)" %></dd>
+  </div>
+</dl>

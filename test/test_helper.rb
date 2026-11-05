@@ -3,6 +3,7 @@ require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/sign_in_helper"
 require_relative "test_helpers/session_test_helper"
+require_relative "test_helpers/api_helper"
 
 module ActiveSupport
   class TestCase

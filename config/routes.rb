@@ -7,6 +7,20 @@ Rails.application.routes.draw do
   # Signed-in user
   resource :account, only: %i[show update destroy]
   root "today#show"
+  resource :phone, only: :show, controller: "phone"
+  namespace :settings do
+    resources :devices, only: %i[index destroy]
+  end
+
+  # JSON API for the Android collector (docs/api.md)
+  namespace :api do
+    namespace :v1 do
+      resources :tokens, only: :create
+      delete "tokens/current", to: "tokens#destroy"
+      post "devices/heartbeat", to: "devices#heartbeat"
+      resources :app_usage_days, :app_sessions, :screen_events, :health_samples, :sleep_sessions, only: :create
+    end
+  end
 
   # Health check for Railway (returns 200 when the app boots)
   get "up" => "rails/health#show", as: :rails_health_check

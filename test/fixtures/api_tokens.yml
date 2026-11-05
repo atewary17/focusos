@@ -1,0 +1,26 @@
+# Plain tokens for tests: fo_test_one, fo_test_two, fo_test_revoked, fo_test_expired
+one_phone:
+  user: one
+  device: one_phone
+  name: Asha's Pixel
+  token_digest: <%= ApiToken.digest("fo_test_one") %>
+
+two_phone:
+  user: two
+  device: two_phone
+  name: Ravi's Nothing
+  token_digest: <%= ApiToken.digest("fo_test_two") %>
+
+revoked:
+  user: one
+  device: one_phone
+  name: Old sign-in
+  token_digest: <%= ApiToken.digest("fo_test_revoked") %>
+  revoked_at: <%= 1.day.ago.to_fs(:db) %>
+
+expired:
+  user: one
+  device: one_phone
+  name: Expired sign-in
+  token_digest: <%= ApiToken.digest("fo_test_expired") %>
+  expires_at: <%= 1.day.ago.to_fs(:db) %>

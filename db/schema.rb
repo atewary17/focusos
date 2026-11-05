@@ -10,9 +10,99 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_064803) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id"
+    t.string "token_digest", null: false
+    t.string "name", null: false
+    t.datetime "last_used_at"
+    t.datetime "expires_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id"], name: "index_api_tokens_on_device_id"
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
+  end
+
+  create_table "app_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.string "package_name", null: false
+    t.datetime "started_at", null: false
+    t.datetime "ended_at", null: false
+    t.integer "duration_seconds", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id", "package_name", "started_at"], name: "idx_on_device_id_package_name_started_at_413d760eae", unique: true
+    t.index ["user_id", "started_at"], name: "index_app_sessions_on_user_id_and_started_at"
+  end
+
+  create_table "app_usage_days", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.date "date", null: false
+    t.string "package_name", null: false
+    t.string "app_label"
+    t.integer "foreground_seconds", default: 0, null: false
+    t.integer "launches", default: 0, null: false
+    t.datetime "first_used_at"
+    t.datetime "last_used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id", "package_name", "date"], name: "index_app_usage_days_on_device_id_and_package_name_and_date", unique: true
+    t.index ["user_id", "date"], name: "index_app_usage_days_on_user_id_and_date"
+    t.index ["user_id"], name: "index_app_usage_days_on_user_id"
+  end
+
+  create_table "devices", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", null: false
+    t.string "installation_id", null: false
+    t.string "name", null: false
+    t.string "manufacturer"
+    t.string "model"
+    t.string "os_version"
+    t.string "app_version"
+    t.datetime "last_sync_at"
+    t.jsonb "last_sync_summary", default: {}, null: false
+    t.jsonb "permissions", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "installation_id"], name: "index_devices_on_user_id_and_installation_id", unique: true
+    t.index ["user_id"], name: "index_devices_on_user_id"
+  end
+
+  create_table "health_samples", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.string "kind", null: false
+    t.datetime "recorded_at", null: false
+    t.datetime "end_at"
+    t.decimal "value", precision: 12, scale: 3, null: false
+    t.string "unit", null: false
+    t.string "source_package", null: false
+    t.string "external_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id"], name: "index_health_samples_on_device_id"
+    t.index ["user_id", "kind", "recorded_at", "source_package"], name: "index_health_samples_uniqueness", unique: true
+  end
+
+  create_table "screen_events", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.string "kind", null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id", "kind", "occurred_at"], name: "index_screen_events_on_device_id_and_kind_and_occurred_at", unique: true
+    t.index ["user_id", "occurred_at"], name: "index_screen_events_on_user_id_and_occurred_at"
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -21,6 +111,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_064803) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "sleep_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.datetime "started_at", null: false
+    t.datetime "ended_at", null: false
+    t.string "source_package", null: false
+    t.string "external_id"
+    t.jsonb "stages", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id"], name: "index_sleep_sessions_on_device_id"
+    t.index ["user_id", "source_package", "started_at"], name: "index_sleep_sessions_uniqueness", unique: true
   end
 
   create_table "solid_queue_batch_executions", force: :cascade do |t|
@@ -184,7 +288,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_064803) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "api_tokens", "devices"
+  add_foreign_key "api_tokens", "users"
+  add_foreign_key "app_sessions", "devices"
+  add_foreign_key "app_sessions", "users"
+  add_foreign_key "app_usage_days", "devices"
+  add_foreign_key "app_usage_days", "users"
+  add_foreign_key "devices", "users"
+  add_foreign_key "health_samples", "devices"
+  add_foreign_key "health_samples", "users"
+  add_foreign_key "screen_events", "devices"
+  add_foreign_key "screen_events", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "sleep_sessions", "devices"
+  add_foreign_key "sleep_sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

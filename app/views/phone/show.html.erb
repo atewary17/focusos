@@ -1,0 +1,58 @@
+<% content_for :title, "Phone" %>
+
+<h1 class="mb-2 text-2xl font-semibold tracking-tight">Phone</h1>
+<p class="mb-8 text-sm text-stone-500">
+  Minutes per app from the FocusOS Android app. Time is per app: Instagram includes DMs, YouTube includes lectures.
+</p>
+
+<% if @report.devices.none? %>
+  <section class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+    <p class="font-medium">No phone connected yet.</p>
+    <p class="mt-1 text-sm text-stone-500">Install the FocusOS Android app and sign in. Data appears here after its first sync.</p>
+  </section>
+<% else %>
+  <section class="mb-8 space-y-4">
+    <% @report.devices.each do |device| %>
+      <div class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+        <p class="font-medium"><%= device.name %></p>
+        <%= render "shared/device_status", device: device %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="mb-8 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-4 font-semibold">Minutes per day</h2>
+    <% if @report.any_data? %>
+      <div class="-mx-5 overflow-x-auto px-5">
+        <table class="w-full min-w-max text-sm">
+          <thead>
+            <tr class="text-left text-stone-500">
+              <th class="py-2 pr-4 font-medium">App</th>
+              <% @report.dates.each do |date| %>
+                <th class="px-2 py-2 text-right font-medium"><%= date == Date.current ? "Today" : date.strftime("%a %-d") %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-100">
+            <% @report.rows.each do |row| %>
+              <tr>
+                <td class="py-2 pr-4" title="<%= row[:package_name] %>"><%= row[:label] %></td>
+                <% row[:minutes].each_value do |minutes| %>
+                  <td class="px-2 py-2 text-right tabular-nums <%= 'text-stone-300' if minutes.zero? %>"><%= minutes %></td>
+                <% end %>
+              </tr>
+            <% end %>
+            <tr class="border-t-2 border-stone-200">
+              <td class="py-2 pr-4 font-medium">Pickups</td>
+              <% @report.pickups.each_value do |count| %>
+                <td class="px-2 py-2 text-right tabular-nums font-medium"><%= count %></td>
+              <% end %>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-stone-500">No app usage uploaded for the last 7 days yet.</p>
+    <% end %>
+  </section>
+<% end %>

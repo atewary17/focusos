@@ -36,9 +36,20 @@ API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one mileston
 6. **Migrations** must be reversible and add `null: false` + indexes where sensible.
 7. **Privacy:** activity and health data are sensitive. Never log raw usage or
    health payloads; deleting an account must delete all of a user's data
-   (`dependent: :destroy` on every `has_many` from `User`).
+   (`dependent: :destroy` on every `has_many` from `User`; `:delete_all` for
+   high-volume collected-data tables without callbacks). Add new upload keys
+   to `config/initializers/filter_parameter_logging.rb`.
 8. **Honest metrics:** watch data is "body context", never a focus or brain measurement.
 9. Keep the UI simple: the Today page optimises for starting a session in one tap.
+
+## API (`/api/v1`, contract in `docs/api.md`)
+- Controllers inherit `Api::V1::BaseController` (`ActionController::API`, bearer
+  tokens via `TokenAuthentication`, JSON errors, 1 MB body limit, rate limit).
+- `Current.user` works for both cookie sessions and API tokens; `Current.device` is set for API requests.
+- Upload endpoints use the `BatchUpload` concern: validate every item, then
+  `upsert_all` on the model's `UPSERT_KEY`; all-or-nothing per request.
+- Collected-data models include `CollectedData` and define `UPSERT_KEY` and `UPLOAD_ATTRIBUTES`.
+- API request tests use `api_post(path, params, token:)` with tokens from `test/fixtures/api_tokens.yml`.
 
 ## Layout (planned modules)
 - Planning: subjects, topics, tasks, day plans
@@ -49,5 +60,6 @@ API endpoints (Phase 3+) follow the contract in `docs/api.md`. Work one mileston
 - Insights: daily stats rollups, reports
 
 ## Environment variables (production)
-`DATABASE_URL`, `RAILS_MASTER_KEY`, `SOLID_QUEUE_IN_PUMA=true`, `APP_HOST`,
-`SIGNUP_INVITE_CODE` (optional; restricts sign-up to people with the code).
+`DATABASE_URL`, `SECRET_KEY_BASE`, `SOLID_QUEUE_IN_PUMA=true`, `APP_HOST`,
+`SIGNUP_INVITE_CODE` (optional; restricts sign-up to people with the code),
+`ANDROID_MIN_APP_VERSION` (optional; default `0.1.0`, returned by the device heartbeat).
