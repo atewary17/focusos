@@ -10,6 +10,7 @@ class DataRetentionTest < ActiveSupport::TestCase
     ScreenEvent.create!(**owner, kind: "unlock", occurred_at: time)
     HealthSample.create!(**owner, kind: "heart_rate", recorded_at: time, value: 70, unit: "bpm", source_package: "x")
     SleepSession.create!(**owner, source_package: "x", started_at: time - 7.hours, ended_at: time)
+    CheckIn.create!(**owner, asked_at: time, answer: "focused", answered_at: time)
   end
 
   def counts(user = users(:one))

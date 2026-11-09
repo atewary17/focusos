@@ -10,7 +10,8 @@ module DataRetention
     "AppSession" => :ended_at,
     "ScreenEvent" => :occurred_at,
     "HealthSample" => :recorded_at,
-    "SleepSession" => :ended_at
+    "SleepSession" => :ended_at,
+    "CheckIn" => :asked_at
   }.freeze
 
   module_function

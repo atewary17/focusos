@@ -168,6 +168,27 @@ class Api::V1::UploadsTest < ActionDispatch::IntegrationTest
     assert_equal 480, session.duration_minutes
   end
 
+  test "stores check-ins and upserts the answer by device and asked_at" do
+    asked_at = 10.minutes.ago.beginning_of_minute
+    api_post api_v1_check_ins_path, { items: [ { asked_at: asked_at.utc.iso8601, answer: "no_answer", source: "android_notification" } ] }
+
+    assert_no_difference -> { CheckIn.count } do
+      api_post api_v1_check_ins_path, { items: [ { asked_at: asked_at.utc.iso8601, answer: "focused",
+                                                    answered_at: (asked_at + 70.seconds).utc.iso8601, source: "android_notification" } ] }
+    end
+
+    assert_response :success
+    check_in = users(:one).check_ins.sole
+    assert_equal "focused", check_in.answer
+  end
+
+  test "requires answered_at unless the answer is no_answer" do
+    api_post api_v1_check_ins_path, { items: [ { asked_at: 10.minutes.ago.utc.iso8601, answer: "focused" } ] }
+
+    assert_response :unprocessable_entity
+    assert_equal 0, CheckIn.count
+  end
+
   test "heartbeat stores permissions and the sync time" do
     api_post api_v1_devices_heartbeat_path, { app_version: "0.1.1",
                                               permissions: { usage_access: true, health_connect: %w[heart_rate sleep], battery_exempt: false },

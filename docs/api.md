@@ -213,6 +213,21 @@ curl -s -X POST $FOCUSOS/sleep_sessions -H "Authorization: Bearer $TOKEN" \
 
 All timestamps in uploads may be at most 5 minutes in the future (phone clock drift).
 
+### `POST /check_ins` – "Are you focused?" answers
+
+Key: device + `asked_at`. On conflict, `answer` and `answered_at` are updated (a prompt
+first uploaded as `no_answer` can be answered later).
+
+```bash
+curl -s -X POST $FOCUSOS/check_ins -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{ "items": [
+  { "asked_at": "2026-11-05T04:30:00Z", "answer": "focused", "answered_at": "2026-11-05T04:31:10Z",
+    "source": "android_notification" },
+  { "asked_at": "2026-11-05T04:50:00Z", "answer": "no_answer", "source": "android_notification" } ] }'
+```
+`answer` ∈ `focused`, `not_focused`, `no_answer`. `answered_at` is required unless `answer`
+is `no_answer`, and must not be before `asked_at`.
+
 ---
 
 ## Planned (not built yet)
