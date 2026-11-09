@@ -11,6 +11,7 @@ class User < ApplicationRecord
   has_many :screen_events, dependent: :delete_all
   has_many :health_samples, dependent: :delete_all
   has_many :sleep_sessions, dependent: :delete_all
+  has_many :check_ins, dependent: :delete_all
   has_many :api_tokens, dependent: :destroy
   has_many :devices, dependent: :destroy
 

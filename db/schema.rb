@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_000007) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_000007) do
     t.index ["device_id", "package_name", "date"], name: "index_app_usage_days_on_device_id_and_package_name_and_date", unique: true
     t.index ["user_id", "date"], name: "index_app_usage_days_on_user_id_and_date"
     t.index ["user_id"], name: "index_app_usage_days_on_user_id"
+  end
+
+  create_table "check_ins", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "device_id", null: false
+    t.datetime "asked_at", null: false
+    t.string "answer", null: false
+    t.datetime "answered_at"
+    t.string "source"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_id", "asked_at"], name: "index_check_ins_on_device_id_and_asked_at", unique: true
+    t.index ["user_id", "asked_at"], name: "index_check_ins_on_user_id_and_asked_at"
   end
 
   create_table "devices", force: :cascade do |t|
@@ -294,6 +307,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_000007) do
   add_foreign_key "app_sessions", "users"
   add_foreign_key "app_usage_days", "devices"
   add_foreign_key "app_usage_days", "users"
+  add_foreign_key "check_ins", "devices"
+  add_foreign_key "check_ins", "users"
   add_foreign_key "devices", "users"
   add_foreign_key "health_samples", "devices"
   add_foreign_key "health_samples", "users"

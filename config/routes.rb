@@ -19,7 +19,7 @@ Rails.application.routes.draw do
       resources :tokens, only: :create
       delete "tokens/current", to: "tokens#destroy"
       post "devices/heartbeat", to: "devices#heartbeat"
-      resources :app_usage_days, :app_sessions, :screen_events, :health_samples, :sleep_sessions, only: :create
+      resources :app_usage_days, :app_sessions, :screen_events, :health_samples, :sleep_sessions, :check_ins, only: :create
     end
   end
 

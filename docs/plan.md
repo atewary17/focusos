@@ -13,13 +13,13 @@ Rule: don't start a phase until the previous one is used daily.
 - [ ] Both users sign up
 
 ## Phase C – Android collector (pulled forward, see ADR 0002 and HANDOFF §6A)
-- [ ] C1 Rails ingest API: tokens, devices, upload endpoints, Settings → Devices, `/phone` page
-- [ ] C2 Android project + sign-in (repo `focusos-android`)
-- [ ] C3 Permissions onboarding: Usage access, Health Connect, battery exemption
-- [ ] C4 Usage collector: daily per-app totals, app sessions, screen events
-- [ ] C5 Health Connect collector: heart rate, sleep, SpO₂, steps (+ HRV if present)
-- [ ] C6 Hourly sync worker, status screen, signed APK on both phones
-- [ ] Dashboard with charts on collector data (ask before adding `chartkick`)
+- [x] C1 Rails ingest API: tokens, devices, upload endpoints incl. `check_ins`, Settings → Devices, `/phone` page
+- [x] C2 Android project + sign-in (repo `focusos-android`)
+- [x] C3 Permissions onboarding: Usage access, Health Connect, battery exemption
+- [x] C4 Usage collector: daily per-app totals, app sessions, screen events
+- [x] C5 Health Connect collector: heart rate, sleep, SpO₂, steps (+ HRV if present)
+- [x] C6 Hourly sync worker, status screen, signed APK (friend install pending)
+- [x] Dashboard with charts on collector data
 
 ## Phase 1 – Planner and checklist (web)
 - [ ] Subjects and topics
