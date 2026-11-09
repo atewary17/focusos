@@ -4,6 +4,10 @@ class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
 
+  has_many :subjects, dependent: :destroy
+  has_many :topics, dependent: :destroy
+  has_many :tasks, dependent: :destroy
+
   # Collected data first, so its rows are gone before the devices they reference.
   # delete_all: these tables can hold many rows and have no callbacks.
   has_many :app_usage_days, dependent: :delete_all

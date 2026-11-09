@@ -1,0 +1,13 @@
+indifference_curves:
+  user: one
+  subject: economics
+  name: Indifference curves
+  status: not_started
+  position: 0
+
+world_war_one:
+  user: two
+  subject: history
+  name: World War One
+  status: not_started
+  position: 0

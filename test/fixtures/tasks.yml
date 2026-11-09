@@ -1,0 +1,17 @@
+read_chapter_three:
+  user: one
+  topic: indifference_curves
+  subject: economics
+  title: Read chapter 3
+  lane: backlog
+  status: pending
+  position: 0
+
+review_notes:
+  user: two
+  topic: world_war_one
+  subject: history
+  title: Review notes
+  lane: backlog
+  status: pending
+  position: 0

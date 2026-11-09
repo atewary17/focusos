@@ -9,6 +9,15 @@ Rails.application.routes.draw do
   root "today#show"
   resource :dashboard, only: :show
   resource :phone, only: :show, controller: "phone"
+  resource :board, only: :show, controller: "board"
+
+  resources :subjects, except: %i[show new edit] do
+    resources :topics, only: :create
+  end
+  resources :topics, only: %i[update destroy]
+  resources :tasks, except: %i[show new edit] do
+    collection { patch :reorder }
+  end
   namespace :settings do
     resources :devices, only: %i[index destroy]
   end

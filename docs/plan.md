@@ -22,12 +22,14 @@ Rule: don't start a phase until the previous one is used daily.
 - [x] Dashboard with charts on collector data
 
 ## Phase 1 – Planner and checklist (web)
-- [ ] Subjects and topics
-- [ ] Tasks: priority, due date, planned minutes, status
-- [ ] Day plan: place tasks into time slots
+- [x] Subjects and topics (`/subjects`): add subjects, add topics under them, archive
+- [x] Backlog board (`/board`): Backlog/Next/Today/Done lanes, drag-and-drop via SortableJS,
+      moving a card into Done completes it, moving it out reopens it
+- [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
+- [ ] Plan timeline, Lock, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)
 - [ ] Recurring tasks
-- [ ] Each model scoped to the user, with a cross-user access test
+- [x] Each model scoped to the user, with a cross-user access test
 
 ## Phase 2 – Focus and check-ins (web)
 - [ ] Focus timer (survives page reload), linked to a task
