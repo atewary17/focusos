@@ -6,13 +6,13 @@ class TaskTest < ActiveSupport::TestCase
     assert tasks(:review_notes).valid?
   end
 
-  test "assigns the next position within the lane" do
-    task = users(:one).tasks.create!(title: "Practice problems", lane: "backlog")
+  test "assigns the next position within the same day (nil groups as unscheduled)" do
+    task = users(:one).tasks.create!(title: "Practice problems")
     assert_equal tasks(:read_chapter_three).position + 1, task.position
   end
 
-  test "a new lane starts at position 0" do
-    task = users(:one).tasks.create!(title: "Draft essay", lane: "today")
+  test "a new day starts at position 0" do
+    task = users(:one).tasks.create!(title: "Draft essay", scheduled_on: Date.current)
     assert_equal 0, task.position
   end
 
@@ -21,13 +21,19 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal subjects(:economics), task.subject
   end
 
-  test "moving a card into done completes it, moving it out reopens it" do
+  test "clears starts_at when scheduled_on is cleared" do
+    task = users(:one).tasks.create!(title: "Read", scheduled_on: Date.current, starts_at: Time.current)
+    task.update!(scheduled_on: nil)
+    assert_nil task.starts_at
+  end
+
+  test "toggle_done! marks a task done and back to pending" do
     task = tasks(:read_chapter_three)
-    task.update!(lane: "done")
+    task.toggle_done!
     assert_equal "done", task.status
     assert_not_nil task.completed_at
 
-    task.update!(lane: "backlog")
+    task.toggle_done!
     assert_equal "pending", task.status
     assert_nil task.completed_at
   end
@@ -49,18 +55,32 @@ class TaskTest < ActiveSupport::TestCase
     assert_not task.valid?
   end
 
-  test "reorder_board! moves cards across lanes and sets their position, scoped to the user" do
-    other = users(:two).tasks.create!(title: "Not mine", lane: "backlog")
-    mine = users(:one).tasks.create!(title: "Mine too", lane: "backlog")
+  test "subtask checklist: add, toggle and remove" do
+    task = tasks(:read_chapter_three)
+    task.add_subtask!("Mockups")
+    task.add_subtask!("Data model")
+    assert_equal [ "Mockups", "Data model" ], task.subtasks.pluck("text")
+
+    task.toggle_subtask!(0)
+    assert task.subtasks[0]["done"]
+    assert_not task.subtasks[1]["done"]
+
+    task.remove_subtask!(0)
+    assert_equal [ "Data model" ], task.subtasks.pluck("text")
+  end
+
+  test "reorder_board! moves cards across days and sets their position, scoped to the user" do
+    other = users(:two).tasks.create!(title: "Not mine")
+    mine = users(:one).tasks.create!(title: "Mine too")
+    today = Date.current.iso8601
 
     Task.reorder_board!(users(:one), {
-      "backlog" => [],
-      "today" => [ mine.id.to_s, tasks(:read_chapter_three).id.to_s ],
-      "next" => [], "done" => []
+      "unscheduled" => [],
+      today => [ mine.id.to_s, tasks(:read_chapter_three).id.to_s ]
     })
 
-    assert_equal [ "today", "today" ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.lane }
+    assert_equal [ Date.current, Date.current ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.scheduled_on }
     assert_equal [ 0, 1 ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.position }
-    assert_equal "backlog", other.reload.lane, "another user's task must not move"
+    assert_nil other.reload.scheduled_on, "another user's task must not move"
   end
 end

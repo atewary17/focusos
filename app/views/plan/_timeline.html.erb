@@ -1,0 +1,27 @@
+<%
+  start_hour = 7
+  end_hour = 21
+  pixels_per_hour = 48
+  total_height = (end_hour - start_hour) * pixels_per_hour
+%>
+<div class="relative rounded-xl border border-stone-200 bg-white" style="height: <%= total_height %>px">
+  <% (start_hour..end_hour).each do |hour| %>
+    <div class="absolute inset-x-0 border-t border-stone-100 text-[10px] text-stone-400"
+         style="top: <%= (hour - start_hour) * pixels_per_hour %>px">
+      <span class="relative -top-1.5 bg-white pr-1"><%= Time.zone.local(2000, 1, 1, hour).strftime("%-l %P") %></span>
+    </div>
+  <% end %>
+
+  <% tasks.each do |task| %>
+    <%
+      local_start = task.starts_at.in_time_zone
+      offset_minutes = (local_start.hour * 60 + local_start.min) - start_hour * 60
+      top = [ offset_minutes, 0 ].max / 60.0 * pixels_per_hour
+      height = [ (task.estimate_minutes || 30) / 60.0 * pixels_per_hour, 16 ].max
+    %>
+    <div class="absolute left-10 right-1 overflow-hidden rounded px-1.5 py-0.5 text-[11px] font-medium text-white"
+         style="top: <%= top %>px; height: <%= height %>px; background: <%= task.subject&.color || "#78716c" %>">
+      <%= task.title %>
+    </div>
+  <% end %>
+</div>

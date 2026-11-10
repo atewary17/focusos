@@ -1,7 +1,7 @@
-# A backlog card. Lanes are the board columns; dragging a card into "done"
-# completes it, dragging it back out reopens it.
+# A plan card. `scheduled_on` is nil for the Unscheduled pool, or a date for
+# one of the day columns; `starts_at` is an optional specific time within
+# that day, shown on the card and used to place it on the timeline.
 class Task < ApplicationRecord
-  LANES = %w[backlog next today done].freeze
   STATUSES = %w[pending done skipped].freeze
   ENERGIES = %w[high low].freeze
 
@@ -12,11 +12,10 @@ class Task < ApplicationRecord
 
   before_validation :assign_position, on: :create
   before_validation :inherit_subject_from_topic
-  before_save :sync_status_with_lane
+  before_validation :align_starts_at_with_scheduled_on
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :notes, length: { maximum: 2000 }
-  validates :lane, inclusion: { in: LANES }
   validates :status, inclusion: { in: STATUSES }
   validates :energy, inclusion: { in: ENERGIES }, allow_nil: true
   validates :priority, inclusion: { in: 1..3 }, allow_nil: true
@@ -24,36 +23,54 @@ class Task < ApplicationRecord
   validate :topic_belongs_to_user
   validate :subject_belongs_to_user
 
-  scope :in_lane, ->(lane) { where(lane: lane).order(:position) }
+  scope :unscheduled, -> { where(scheduled_on: nil).order(:position) }
+  scope :scheduled_on_date, ->(date) { where(scheduled_on: date).order(:position) }
 
-  # Moves every card into the given lane and position, in one transaction.
-  # `lanes` is { "backlog" => [id, id, …], "next" => [...], … }; ids outside
-  # the caller's own tasks are silently skipped by the `user.tasks` scope.
-  def self.reorder_board!(user, lanes)
+  # Moves every card into the given day (or the Unscheduled pool) and
+  # position, in one transaction. `days` is { "unscheduled" | "2026-11-10" => [id, …] };
+  # ids outside the caller's own tasks are silently skipped by the `user.tasks` scope.
+  def self.reorder_board!(user, days)
     transaction do
-      lanes.each do |lane, ids|
-        ids.each_with_index { |id, index| user.tasks.where(id: id).update_all(lane: lane, position: index) }
+      days.each do |key, ids|
+        date = key == "unscheduled" ? nil : Date.iso8601(key)
+        ids.each_with_index { |id, index| user.tasks.where(id: id).update_all(scheduled_on: date, position: index) }
       end
     end
   end
 
+  def toggle_done!
+    update!(status: status == "done" ? "pending" : "done", completed_at: status == "done" ? nil : Time.current)
+  end
+
+  def add_subtask!(text)
+    update!(subtasks: subtasks + [ { "text" => text, "done" => false } ])
+  end
+
+  def toggle_subtask!(index)
+    return unless subtasks[index]
+
+    updated = subtasks.dup
+    updated[index] = updated[index].merge("done" => !updated[index]["done"])
+    update!(subtasks: updated)
+  end
+
+  def remove_subtask!(index)
+    update!(subtasks: subtasks.each_with_index.reject { |_item, i| i == index }.map(&:first))
+  end
+
   private
     def assign_position
-      self.position = (user&.tasks&.where(lane: lane)&.maximum(:position) || -1) + 1
+      self.position = (user&.tasks&.where(scheduled_on: scheduled_on)&.maximum(:position) || -1) + 1
     end
 
     def inherit_subject_from_topic
       self.subject_id ||= topic&.subject_id
     end
 
-    def sync_status_with_lane
-      if lane_changed? && lane == "done"
-        self.status = "done"
-        self.completed_at ||= Time.current
-      elsif lane_changed? && status == "done"
-        self.status = "pending"
-        self.completed_at = nil
-      end
+    # A time only makes sense alongside a day; dropping a card into
+    # Unscheduled clears any time it had.
+    def align_starts_at_with_scheduled_on
+      self.starts_at = nil if scheduled_on.nil?
     end
 
     def topic_belongs_to_user

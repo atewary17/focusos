@@ -3,7 +3,6 @@ read_chapter_three:
   topic: indifference_curves
   subject: economics
   title: Read chapter 3
-  lane: backlog
   status: pending
   position: 0
 
@@ -12,6 +11,5 @@ review_notes:
   topic: world_war_one
   subject: history
   title: Review notes
-  lane: backlog
   status: pending
   position: 0

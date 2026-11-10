@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_074953) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -308,7 +308,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_074953) do
     t.bigint "subject_id"
     t.string "title", null: false
     t.text "notes"
-    t.string "lane", default: "backlog", null: false
     t.integer "position", default: 0, null: false
     t.integer "priority"
     t.date "due_on"
@@ -319,9 +318,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_074953) do
     t.bigint "carried_from_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "scheduled_on"
+    t.datetime "starts_at"
+    t.jsonb "subtasks", default: [], null: false
     t.index ["subject_id"], name: "index_tasks_on_subject_id"
     t.index ["topic_id"], name: "index_tasks_on_topic_id"
-    t.index ["user_id", "lane", "position"], name: "index_tasks_on_user_id_and_lane_and_position"
+    t.index ["user_id", "scheduled_on", "position"], name: "index_tasks_on_user_id_and_scheduled_on_and_position"
   end
 
   create_table "topics", force: :cascade do |t|

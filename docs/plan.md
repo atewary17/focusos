@@ -23,8 +23,10 @@ Rule: don't start a phase until the previous one is used daily.
 
 ## Phase 1 – Planner and checklist (web)
 - [x] Subjects and topics (`/subjects`): add subjects, add topics under them, archive
-- [x] Backlog board (`/board`): Backlog/Next/Today/Done lanes, drag-and-drop via SortableJS,
-      moving a card into Done completes it, moving it out reopens it
+- [x] Day planner (`/plan`): Unscheduled pool + day columns (Sunsama-style, replaced the
+      Backlog/Next/Today/Done Kanban board), drag-and-drop via SortableJS to reschedule a
+      card onto a different day, subtask checklists, a per-day progress bar, and an
+      hour-by-hour timeline for today
 - [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
 - [ ] Plan timeline, Lock, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)

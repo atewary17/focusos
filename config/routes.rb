@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   root "today#show"
   resource :dashboard, only: :show
   resource :phone, only: :show, controller: "phone"
-  resource :board, only: :show, controller: "board"
+  resource :plan, only: :show, controller: "plan"
 
   resources :subjects, except: %i[show new edit] do
     resources :topics, only: :create
@@ -17,6 +17,10 @@ Rails.application.routes.draw do
   resources :topics, only: %i[update destroy]
   resources :tasks, except: %i[show new edit] do
     collection { patch :reorder }
+    member { patch :toggle }
+    resources :subtasks, only: :create, controller: "task_subtasks"
+    patch "subtasks/:subtask_id/toggle", to: "task_subtasks#toggle", as: :toggle_task_subtask
+    delete "subtasks/:subtask_id", to: "task_subtasks#destroy", as: :task_subtask
   end
   namespace :settings do
     resources :devices, only: %i[index destroy]

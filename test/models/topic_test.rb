@@ -26,7 +26,7 @@ class TopicTest < ActiveSupport::TestCase
     assert_equal 1, topics(:indifference_curves).tasks_count
     assert_equal 0, topics(:indifference_curves).done_tasks_count
 
-    tasks(:read_chapter_three).update!(lane: "done")
+    tasks(:read_chapter_three).update!(status: "done")
     assert_equal 1, topics(:indifference_curves).done_tasks_count
   end
 

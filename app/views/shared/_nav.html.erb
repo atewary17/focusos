@@ -8,8 +8,8 @@
     <div class="flex items-center gap-0.5 text-sm sm:gap-1">
       <%= link_to "Today", root_path,
             class: "whitespace-nowrap rounded-md px-2 py-1.5 sm:px-3 #{current_page?(root_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
-      <%= link_to "Board", board_path,
-            class: "whitespace-nowrap rounded-md px-2 py-1.5 sm:px-3 #{current_page?(board_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
+      <%= link_to "Plan", plan_path,
+            class: "whitespace-nowrap rounded-md px-2 py-1.5 sm:px-3 #{current_page?(plan_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
       <%= link_to "Subjects", subjects_path,
             class: "whitespace-nowrap rounded-md px-2 py-1.5 sm:px-3 #{current_page?(subjects_path) ? 'bg-stone-100 font-medium text-stone-900' : 'text-stone-600 hover:text-stone-900'}" %>
       <%= link_to "Dashboard", dashboard_path,

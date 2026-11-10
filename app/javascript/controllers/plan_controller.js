@@ -1,15 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
 import Sortable from "sortablejs"
 
-// The backlog board: one Sortable list per lane, all in the same group so
-// cards can be dragged between lanes. Any drop anywhere posts the full
-// board state (every lane's card ids, in order) to persist it.
+// The day planner: one Sortable list per column (Unscheduled + each day),
+// all in the same group so cards can be dragged onto a different day. Any
+// drop anywhere posts the full board state (every column's card ids, in
+// order) to persist it.
 export default class extends Controller {
-  static targets = ["lane"]
+  static targets = ["column"]
 
   connect() {
-    this.sortables = this.laneTargets.map((lane) => new Sortable(lane, {
-      group: "board",
+    this.sortables = this.columnTargets.map((column) => new Sortable(column, {
+      group: "plan",
       animation: 150,
       ghostClass: "opacity-40",
       dragClass: "shadow-lg",
@@ -28,9 +29,9 @@ export default class extends Controller {
   }
 
   #persist() {
-    const lanes = {}
-    this.laneTargets.forEach((lane) => {
-      lanes[lane.dataset.lane] = Array.from(lane.children).map((card) => card.dataset.taskId)
+    const days = {}
+    this.columnTargets.forEach((column) => {
+      days[column.dataset.day] = Array.from(column.children).map((card) => card.dataset.taskId)
     })
 
     fetch(this.element.dataset.reorderUrl, {
@@ -40,7 +41,7 @@ export default class extends Controller {
         "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
         "Accept": "application/json",
       },
-      body: JSON.stringify({ lanes }),
+      body: JSON.stringify({ days }),
     })
   }
 }
