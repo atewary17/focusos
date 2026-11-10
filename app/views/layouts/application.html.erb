@@ -25,7 +25,7 @@
       <%= render "shared/nav" %>
     <% end %>
 
-    <main class="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+    <main class="mx-auto w-full <%= content_for(:container_class).presence || "max-w-3xl" %> px-4 py-8 sm:py-12">
       <%= render "shared/flash" %>
       <%= yield %>
     </main>

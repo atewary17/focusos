@@ -1,4 +1,5 @@
 <% content_for :title, "Plan" %>
+<% content_for :container_class, "max-w-none" %>
 
 <div class="mb-6 flex items-center justify-between gap-3">
   <h1 class="text-2xl font-semibold tracking-tight">Plan</h1>
@@ -26,7 +27,7 @@
     </section>
 
     <% @days.each do |date| %>
-      <section class="w-64 shrink-0">
+      <section class="w-72 shrink-0">
         <div class="mb-2">
           <h2 class="flex items-center justify-between text-sm font-semibold text-stone-700">
             <%= date == Date.current ? "Today" : date.strftime("%A") %>
@@ -46,7 +47,7 @@
     <% end %>
   </div>
 
-  <aside class="hidden w-40 shrink-0 lg:block">
+  <aside class="hidden w-72 shrink-0 lg:block">
     <h2 class="mb-2 text-sm font-semibold text-stone-700">Today's timeline</h2>
     <%= render "timeline", tasks: @timeline_tasks %>
   </aside>
