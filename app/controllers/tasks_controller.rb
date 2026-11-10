@@ -1,5 +1,5 @@
 class TasksController < ApplicationController
-  before_action :set_task, only: %i[update destroy toggle]
+  before_action :set_task, only: %i[update destroy toggle restore]
 
   def create
     @task = Current.user.tasks.build(task_params)
@@ -21,8 +21,13 @@ class TasksController < ApplicationController
   end
 
   def destroy
-    @task.destroy
-    redirect_to plan_path
+    @task.soft_delete!
+    redirect_to plan_path, notice: "Removed “#{@task.title}”.", flash: { undo_url: restore_task_path(@task) }
+  end
+
+  def restore
+    @task.restore!
+    redirect_to plan_path, notice: "Restored “#{@task.title}”."
   end
 
   # Called after a drag-and-drop move: the whole planner's day/position

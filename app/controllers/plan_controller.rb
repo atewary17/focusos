@@ -5,7 +5,7 @@ class PlanController < ApplicationController
   DAY_CAPACITY_MINUTES = 480 # 8 hours; shown as the progress bar's full width
 
   def show
-    tasks = Current.user.tasks.includes(:subject, :topic).where(status: %w[pending done])
+    tasks = Current.user.tasks.kept.includes(:subject, :topic).where(status: %w[pending done])
     @days = (0...DAYS_SHOWN).map { |offset| Date.current + offset }
     @unscheduled = tasks.select { |task| task.scheduled_on.nil? }.sort_by(&:position)
     @tasks_by_day = @days.index_with { |date| tasks.select { |task| task.scheduled_on == date }.sort_by(&:position) }

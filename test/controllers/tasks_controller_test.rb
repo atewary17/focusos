@@ -27,20 +27,39 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "updates and destroys the user's own card" do
+  test "updates the user's own card" do
     patch task_path(tasks(:read_chapter_three)), params: { task: { title: "Renamed" } }
     assert_equal "Renamed", tasks(:read_chapter_three).reload.title
-
-    assert_difference -> { Task.count }, -1 do
-      delete task_path(tasks(:read_chapter_three))
-    end
   end
 
-  test "cannot update or destroy another user's card" do
+  test "destroy soft-deletes the card and offers an undo link, without reducing the row count" do
+    assert_no_difference -> { Task.count } do
+      delete task_path(tasks(:read_chapter_three))
+    end
+
+    assert_redirected_to plan_path
+    assert_not_nil tasks(:read_chapter_three).reload.deleted_at
+    assert_not_includes users(:one).tasks.kept, tasks(:read_chapter_three)
+    assert_equal restore_task_path(tasks(:read_chapter_three)), flash[:undo_url]
+  end
+
+  test "restore brings a soft-deleted card back" do
+    tasks(:read_chapter_three).soft_delete!
+
+    patch restore_task_path(tasks(:read_chapter_three))
+
+    assert_redirected_to plan_path
+    assert_nil tasks(:read_chapter_three).reload.deleted_at
+  end
+
+  test "cannot update, destroy or restore another user's card" do
     patch task_path(tasks(:review_notes)), params: { task: { title: "x" } }
     assert_response :not_found
 
     delete task_path(tasks(:review_notes))
+    assert_response :not_found
+
+    patch restore_task_path(tasks(:review_notes))
     assert_response :not_found
   end
 

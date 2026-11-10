@@ -13,9 +13,16 @@
       <% end %>
       <p class="text-sm font-medium text-stone-900 <%= 'line-through' if task.status == 'done' %>"><%= task.title %></p>
     </div>
-    <% if task.estimate_minutes %>
-      <span class="shrink-0 rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-500"><%= task.estimate_minutes %>m</span>
-    <% end %>
+    <div class="flex shrink-0 items-center gap-1.5">
+      <% if task.estimate_minutes %>
+        <span class="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-500"><%= task.estimate_minutes %>m</span>
+      <% end %>
+      <%= button_to task_path(task), method: :delete, title: "Delete card",
+            class: "cursor-pointer rounded px-1 text-stone-300 hover:bg-red-50 hover:text-red-500",
+            form: { class: "leading-none" } do %>
+        🗑
+      <% end %>
+    </div>
   </div>
 
   <% if task.subtasks.any? %>
@@ -57,8 +64,5 @@
         due <%= task.due_on.strftime("%-d %b") %>
       </span>
     <% end %>
-    <%= button_to "Remove", task_path(task), method: :delete,
-          form: { data: { turbo_confirm: "Remove this card?" }, class: "ml-auto" },
-          class: "cursor-pointer text-stone-300 hover:text-stone-500" %>
   </div>
 </div>

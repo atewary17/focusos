@@ -69,6 +69,18 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal [ "Data model" ], task.subtasks.pluck("text")
   end
 
+  test "soft_delete! hides a task from kept without destroying it, restore! brings it back" do
+    task = tasks(:read_chapter_three)
+    task.soft_delete!
+    assert_not_nil task.deleted_at
+    assert_not_includes users(:one).tasks.kept, task
+    assert Task.exists?(task.id)
+
+    task.restore!
+    assert_nil task.deleted_at
+    assert_includes users(:one).tasks.kept, task
+  end
+
   test "reorder_board! moves cards across days and sets their position, scoped to the user" do
     other = users(:two).tasks.create!(title: "Not mine")
     mine = users(:one).tasks.create!(title: "Mine too")

@@ -25,6 +25,7 @@ class Task < ApplicationRecord
 
   scope :unscheduled, -> { where(scheduled_on: nil).order(:position) }
   scope :scheduled_on_date, ->(date) { where(scheduled_on: date).order(:position) }
+  scope :kept, -> { where(deleted_at: nil) }
 
   # Moves every card into the given day (or the Unscheduled pool) and
   # position, in one transaction. `days` is { "unscheduled" | "2026-11-10" => [id, …] };
@@ -56,6 +57,16 @@ class Task < ApplicationRecord
 
   def remove_subtask!(index)
     update!(subtasks: subtasks.each_with_index.reject { |_item, i| i == index }.map(&:first))
+  end
+
+  # Soft delete: hidden from the planner immediately, but kept around so
+  # "Undo" can bring it straight back without losing subtasks or position.
+  def soft_delete!
+    update!(deleted_at: Time.current)
+  end
+
+  def restore!
+    update!(deleted_at: nil)
   end
 
   private

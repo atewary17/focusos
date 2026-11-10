@@ -12,6 +12,16 @@ class PlanControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: tasks(:review_notes).title, count: 0
   end
 
+  test "hides soft-deleted tasks" do
+    tasks(:read_chapter_three).soft_delete!
+
+    sign_in users(:one)
+    get plan_path
+
+    assert_response :success
+    assert_select "p", text: tasks(:read_chapter_three).title, count: 0
+  end
+
   test "requires sign-in" do
     get plan_path
     assert_redirected_to new_session_path

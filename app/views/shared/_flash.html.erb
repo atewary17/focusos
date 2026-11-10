@@ -1,5 +1,11 @@
 <% if notice.present? %>
-  <div class="mb-6 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900" role="status"><%= notice %></div>
+  <div class="mb-6 flex items-center justify-between gap-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900" role="status">
+    <span><%= notice %></span>
+    <% if flash[:undo_url] %>
+      <%= button_to "Undo", flash[:undo_url], method: :patch,
+            form: { class: "shrink-0" }, class: "cursor-pointer font-medium text-teal-700 underline hover:text-teal-900" %>
+    <% end %>
+  </div>
 <% end %>
 <% if alert.present? %>
   <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert"><%= alert %></div>

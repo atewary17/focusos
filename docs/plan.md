@@ -27,6 +27,9 @@ Rule: don't start a phase until the previous one is used daily.
       Backlog/Next/Today/Done Kanban board), drag-and-drop via SortableJS to reschedule a
       card onto a different day, subtask checklists, a per-day progress bar, and an
       hour-by-hour timeline for today
+- [x] Delete a card with Undo (soft delete; the flash message carries a restore link)
+- [x] Export/import the whole plan (subjects, topics, tasks) as one JSON file (`/plan_template`),
+      for backup or reuse as a starting template; import only adds, never overwrites
 - [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
 - [ ] Plan timeline, Lock, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)
