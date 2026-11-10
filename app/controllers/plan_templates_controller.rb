@@ -31,6 +31,8 @@ class PlanTemplatesController < ApplicationController
                                         "#{counts[:tasks]} task(s)."
   rescue JSON::ParserError
     redirect_to subjects_path, alert: "That file isn't a valid FocusOS plan export."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to subjects_path, alert: "Couldn't import that file: #{e.record.errors.full_messages.to_sentence}."
   end
 
   private
@@ -92,9 +94,9 @@ class PlanTemplatesController < ApplicationController
       Current.user.tasks.create!(
         title: task_data["title"].to_s.presence || "Untitled",
         notes: task_data["notes"],
-        priority: task_data["priority"],
+        priority: normalize_priority(task_data["priority"]),
         estimate_minutes: task_data["estimate_minutes"],
-        energy: task_data["energy"],
+        energy: normalize_energy(task_data["energy"]),
         due_on: parse_date(task_data["due_on"]),
         scheduled_on: parse_date(task_data["scheduled_on"]),
         starts_at: parse_starts_at(task_data["scheduled_on"], task_data["starts_time"]),
@@ -109,6 +111,17 @@ class PlanTemplatesController < ApplicationController
       return nil if text.blank?
 
       { "text" => text, "done" => ActiveModel::Type::Boolean.new.cast(subtask_data["done"]) }
+    end
+
+    # External files (hand-written, or from another tool) may use values our
+    # fixed enums don't - e.g. "medium" energy. Drop what we don't recognize
+    # rather than fail the whole import over one field.
+    def normalize_energy(value)
+      value if Task::ENERGIES.include?(value)
+    end
+
+    def normalize_priority(value)
+      value if (1..3).cover?(value)
     end
 
     def parse_date(value)

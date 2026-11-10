@@ -33,6 +33,43 @@ class PlanTemplatesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ { "text" => "Step one", "done" => true } ], task.subtasks
   end
 
+  test "drops energy and priority values our enums don't recognize instead of failing the import" do
+    payload = {
+      version: 1,
+      subjects: [ { name: "Work", color: "#2563eb", topics: [], tasks: [
+        { title: "Admin", energy: "medium", priority: 7, scheduled_on: "2026-11-11", starts_time: "13:30" }
+      ] } ],
+      unscheduled_tasks: []
+    }
+    file = fixture_upload(payload, "medium-energy.json")
+
+    post plan_template_path, params: { file: file }
+
+    assert_redirected_to subjects_path
+    assert_nil flash[:alert]
+    task = users(:one).subjects.find_by!(name: "Work").tasks.find_by!(title: "Admin")
+    assert_nil task.energy
+    assert_nil task.priority
+    assert_equal Date.new(2026, 11, 11), task.scheduled_on
+  end
+
+  test "shows a friendly alert instead of crashing when a task still fails validation" do
+    payload = {
+      version: 1,
+      subjects: [ { name: "Work", color: "#2563eb", topics: [], tasks: [
+        { title: "x" * 300 }
+      ] } ],
+      unscheduled_tasks: []
+    }
+    file = fixture_upload(payload, "bad-title.json")
+
+    assert_no_difference -> { Subject.count } do
+      post plan_template_path, params: { file: file }
+    end
+    assert_redirected_to subjects_path
+    assert_match(/couldn.t import/i, flash[:alert])
+  end
+
   test "rejects a file with the wrong version" do
     file = fixture_upload({ version: 2, subjects: [] }, "wrong_version.json")
 
