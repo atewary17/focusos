@@ -30,6 +30,9 @@ Rule: don't start a phase until the previous one is used daily.
 - [x] Delete a card with Undo (soft delete; the flash message carries a restore link)
 - [x] Export/import the whole plan (subjects, topics, tasks) as one JSON file (`/plan_template`),
       for backup or reuse as a starting template; import only adds, never overwrites
+- [x] "Remove all plans": one button on `/plan` that clears every card (hard delete, confirmed)
+- [x] Every page shares one standard width (`max-w-7xl`); single-column pages (Today, Settings,
+      Devices) keep an inner `max-w-2xl` so their content doesn't stretch edge to edge
 - [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
 - [ ] Plan timeline, Lock, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)

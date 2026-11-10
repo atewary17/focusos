@@ -30,6 +30,15 @@ class TasksController < ApplicationController
     redirect_to plan_path, notice: "Restored “#{@task.title}”."
   end
 
+  # Wipes every card the user has (Unscheduled and every day), not just the
+  # ones currently visible. A hard delete, not soft: clearing everything is
+  # a deliberate reset, not a single mistake to offer "Undo" on.
+  def destroy_all
+    count = Current.user.tasks.count
+    Current.user.tasks.destroy_all
+    redirect_to plan_path, notice: "Removed all #{count} card(s) from your plan."
+  end
+
   # Called after a drag-and-drop move: the whole planner's day/position
   # state, as { "unscheduled" | "2026-11-10" => [id, …], … }.
   def reorder

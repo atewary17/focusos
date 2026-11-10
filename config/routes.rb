@@ -17,7 +17,10 @@ Rails.application.routes.draw do
   end
   resources :topics, only: %i[update destroy]
   resources :tasks, except: %i[show new edit] do
-    collection { patch :reorder }
+    collection do
+      patch :reorder
+      delete :destroy_all
+    end
     member do
       patch :toggle
       patch :restore

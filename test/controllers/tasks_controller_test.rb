@@ -63,6 +63,24 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "destroy_all hard-deletes every one of the user's cards, scheduled or not" do
+    users(:one).tasks.create!(title: "Second unscheduled card")
+    users(:one).tasks.create!(title: "Scheduled card", scheduled_on: Date.current)
+    mine_before = users(:one).tasks.count
+
+    assert_difference -> { Task.count }, -mine_before do
+      delete destroy_all_tasks_path
+    end
+
+    assert_redirected_to plan_path
+    assert_equal 0, users(:one).tasks.count
+  end
+
+  test "destroy_all never touches another user's cards" do
+    delete destroy_all_tasks_path
+    assert tasks(:review_notes).reload.present?
+  end
+
   test "cannot attach a card to another user's topic" do
     assert_no_difference -> { Task.count } do
       post tasks_path, params: { task: { title: "Spy", topic_id: topics(:world_war_one).id } }
