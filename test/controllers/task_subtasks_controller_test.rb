@@ -3,9 +3,15 @@ require "test_helper"
 class TaskSubtasksControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in users(:one) }
 
-  test "adds a subtask" do
+  test "adds a subtask and returns to the board by default" do
     post task_subtasks_path(tasks(:read_chapter_three)), params: { text: "Read page one" }
     assert_equal [ "Read page one" ], tasks(:read_chapter_three).reload.subtasks.pluck("text")
+    assert_redirected_to board_path
+  end
+
+  test "returns to the calendar when return_to=calendar" do
+    post task_subtasks_path(tasks(:read_chapter_three)), params: { text: "Read page one", return_to: "calendar" }
+    assert_redirected_to calendar_path
   end
 
   test "ignores a blank subtask" do

@@ -1,0 +1,44 @@
+<% content_for :title, "Board" %>
+
+<div class="mb-6 flex items-center justify-between gap-3">
+  <h1 class="text-2xl font-semibold tracking-tight">Board</h1>
+  <div class="flex items-center gap-4">
+    <% if @lanes.values.any?(&:any?) %>
+      <%= button_to "Remove all cards", destroy_all_tasks_path, method: :delete,
+            form: { data: { turbo_confirm: "Remove every card? This can't be undone." } },
+            class: "cursor-pointer text-sm font-medium text-red-600 hover:text-red-700" %>
+    <% end %>
+    <%= link_to "Calendar", calendar_path, class: "text-sm font-medium text-teal-700 hover:text-teal-800" %>
+    <%= link_to "Subjects & topics", subjects_path, class: "text-sm font-medium text-teal-700 hover:text-teal-800" %>
+  </div>
+</div>
+
+<% if @subjects.none? %>
+  <section class="mb-6 rounded-2xl border border-dashed border-stone-300 p-5 text-sm text-stone-600">
+    No subjects yet. <%= link_to "Add one", subjects_path, class: "font-medium text-teal-700" %> to tag cards, or add a card below without one.
+  </section>
+<% end %>
+
+<div data-controller="board" data-reorder-url="<%= reorder_status_tasks_path %>"
+     class="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
+  <% { "pending" => "To-do", "doing" => "Doing", "done" => "Done" }.each do |status, label| %>
+    <section class="w-72 shrink-0">
+      <h2 class="mb-2 flex items-center justify-between text-sm font-semibold text-stone-700">
+        <%= label %>
+        <span class="text-xs font-normal text-stone-400"><%= @lanes[status].size %></span>
+      </h2>
+      <%= render "quick_add", status: status, subjects: @subjects %>
+      <div data-board-target="lane" data-status="<%= status %>" class="min-h-16 space-y-2 rounded-xl p-1">
+        <%= render partial: "tasks/card", collection: @lanes[status], as: :task, locals: { return_to: "board" } %>
+      </div>
+    </section>
+  <% end %>
+
+  <section class="w-72 shrink-0">
+    <h2 class="mb-2 flex items-center justify-between text-sm font-semibold text-stone-700">
+      Recurring
+      <span class="text-xs font-normal text-stone-400"><%= @recurring_tasks.size %></span>
+    </h2>
+    <%= render "recurring", recurring_tasks: @recurring_tasks, subjects: @subjects %>
+  </section>
+</div>

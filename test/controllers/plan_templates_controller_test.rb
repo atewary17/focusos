@@ -4,6 +4,8 @@ class PlanTemplatesControllerTest < ActionDispatch::IntegrationTest
   setup { sign_in users(:one) }
 
   test "exports the user's own plan as JSON, excluding other users' data" do
+    tasks(:read_chapter_three).update!(status: "doing")
+
     get plan_template_path
 
     assert_response :success
@@ -15,7 +17,26 @@ class PlanTemplatesControllerTest < ActionDispatch::IntegrationTest
     assert subject, "expected the Economics subject in the export"
     topic = subject["topics"].find { |t| t["name"] == "Indifference curves" }
     assert_equal [ "Read chapter 3" ], topic["tasks"].pluck("title")
+    assert_equal "doing", topic["tasks"].first["status"]
     assert_not body["subjects"].any? { |s| s["name"] == "History" }
+  end
+
+  test "status round-trips through export and falls back to pending for an unrecognized value" do
+    payload = {
+      version: 1,
+      subjects: [ { name: "Work", color: "#2563eb", topics: [], tasks: [
+        { title: "Done already", status: "done" },
+        { title: "Weird status", status: "archived" }
+      ] } ],
+      unscheduled_tasks: []
+    }
+    file = fixture_upload(payload, "statuses.json")
+
+    post plan_template_path, params: { file: file }
+
+    work = users(:one).subjects.find_by!(name: "Work")
+    assert_equal "done", work.tasks.find_by!(title: "Done already").status
+    assert_equal "pending", work.tasks.find_by!(title: "Weird status").status
   end
 
   test "imports subjects, topics and tasks under the signed-in user" do

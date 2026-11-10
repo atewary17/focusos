@@ -6,14 +6,19 @@ class TaskTest < ActiveSupport::TestCase
     assert tasks(:review_notes).valid?
   end
 
-  test "assigns the next position within the same day (nil groups as unscheduled)" do
+  test "assigns the next calendar position within the same day (nil groups as unscheduled)" do
     task = users(:one).tasks.create!(title: "Practice problems")
-    assert_equal tasks(:read_chapter_three).position + 1, task.position
+    assert_equal tasks(:read_chapter_three).calendar_position + 1, task.calendar_position
   end
 
-  test "a new day starts at position 0" do
+  test "a new day starts calendar position at 0" do
     task = users(:one).tasks.create!(title: "Draft essay", scheduled_on: Date.current)
-    assert_equal 0, task.position
+    assert_equal 0, task.calendar_position
+  end
+
+  test "assigns the next board position within the same status" do
+    task = users(:one).tasks.create!(title: "Practice problems")
+    assert_equal tasks(:read_chapter_three).board_position + 1, task.board_position
   end
 
   test "inherits the subject from its topic when none is given" do
@@ -38,6 +43,27 @@ class TaskTest < ActiveSupport::TestCase
     assert_nil task.completed_at
   end
 
+  test "reschedule! sets the day, time and calendar position" do
+    task = tasks(:read_chapter_three)
+    other = users(:one).tasks.create!(title: "Already there", scheduled_on: Date.current)
+
+    task.reschedule!(Date.current, Time.zone.parse("09:30"))
+
+    assert_equal Date.current, task.scheduled_on
+    assert_equal [ 9, 30 ], [ task.starts_at.hour, task.starts_at.min ]
+    assert_equal other.calendar_position + 1, task.calendar_position
+  end
+
+  test "reschedule! with a nil date clears scheduling" do
+    task = tasks(:read_chapter_three)
+    task.reschedule!(Date.current, Time.zone.parse("09:30"))
+
+    task.reschedule!(nil)
+
+    assert_nil task.scheduled_on
+    assert_nil task.starts_at
+  end
+
   test "rejects a topic that belongs to another user" do
     task = Task.new(user: users(:one), title: "Spy on history", topic: topics(:world_war_one))
     assert_not task.valid?
@@ -53,6 +79,11 @@ class TaskTest < ActiveSupport::TestCase
   test "rejects an out-of-range priority" do
     task = Task.new(user: users(:one), title: "x", priority: 4)
     assert_not task.valid?
+  end
+
+  test "accepts the doing status" do
+    task = Task.new(user: users(:one), title: "x", status: "doing")
+    assert task.valid?
   end
 
   test "subtask checklist: add, toggle and remove" do
@@ -81,18 +112,17 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes users(:one).tasks.kept, task
   end
 
-  test "reorder_board! moves cards across days and sets their position, scoped to the user" do
+  test "reorder_board! moves cards across statuses and sets their board position, scoped to the user" do
     other = users(:two).tasks.create!(title: "Not mine")
     mine = users(:one).tasks.create!(title: "Mine too")
-    today = Date.current.iso8601
 
     Task.reorder_board!(users(:one), {
-      "unscheduled" => [],
-      today => [ mine.id.to_s, tasks(:read_chapter_three).id.to_s ]
+      "pending" => [],
+      "doing" => [ mine.id.to_s, tasks(:read_chapter_three).id.to_s ]
     })
 
-    assert_equal [ Date.current, Date.current ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.scheduled_on }
-    assert_equal [ 0, 1 ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.position }
-    assert_nil other.reload.scheduled_on, "another user's task must not move"
+    assert_equal %w[doing doing], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.status }
+    assert_equal [ 0, 1 ], [ mine, tasks(:read_chapter_three) ].map { |t| t.reload.board_position }
+    assert_equal "pending", other.reload.status, "another user's task must not move"
   end
 end

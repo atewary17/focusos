@@ -9,7 +9,7 @@ class PlanTemplatesController < ApplicationController
       version: FORMAT_VERSION,
       exported_at: Time.current.iso8601,
       subjects: Current.user.subjects.active.includes(topics: :tasks).order(:position).map { |subject| subject_json(subject) },
-      unscheduled_tasks: Current.user.tasks.kept.where(subject_id: nil, topic_id: nil).order(:position).map { |task| task_json(task) }
+      unscheduled_tasks: Current.user.tasks.kept.where(subject_id: nil, topic_id: nil).order(:calendar_position).map { |task| task_json(task) }
     }
     send_data JSON.pretty_generate(payload), filename: "focusos-plan-#{Date.current.iso8601}.json",
                                                type: "application/json", disposition: "attachment"
@@ -48,7 +48,8 @@ class PlanTemplatesController < ApplicationController
     end
 
     def task_json(task)
-      { title: task.title, notes: task.notes, priority: task.priority, estimate_minutes: task.estimate_minutes,
+      { title: task.title, notes: task.notes, status: task.status, priority: task.priority,
+        estimate_minutes: task.estimate_minutes,
         energy: task.energy, due_on: task.due_on&.iso8601, scheduled_on: task.scheduled_on&.iso8601,
         starts_time: task.starts_at&.in_time_zone&.strftime("%H:%M"),
         subtasks: task.subtasks.map { |s| { text: s["text"], done: s["done"] } } }
@@ -94,6 +95,7 @@ class PlanTemplatesController < ApplicationController
       Current.user.tasks.create!(
         title: task_data["title"].to_s.presence || "Untitled",
         notes: task_data["notes"],
+        status: normalize_status(task_data["status"]),
         priority: normalize_priority(task_data["priority"]),
         estimate_minutes: task_data["estimate_minutes"],
         energy: normalize_energy(task_data["energy"]),
@@ -118,6 +120,13 @@ class PlanTemplatesController < ApplicationController
     # rather than fail the whole import over one field.
     def normalize_energy(value)
       value if Task::ENERGIES.include?(value)
+    end
+
+    # Unlike energy/priority, status can't just be dropped: the column is
+    # NOT NULL, so an unrecognized value falls back to "pending" rather
+    # than nil (which would fail the insert outright).
+    def normalize_status(value)
+      Task::STATUSES.include?(value) ? value : "pending"
     end
 
     def normalize_priority(value)

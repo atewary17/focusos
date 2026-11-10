@@ -1,16 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 import Sortable from "sortablejs"
 
-// The day planner: one Sortable list per column (Unscheduled + each day),
-// all in the same group so cards can be dragged onto a different day. Any
-// drop anywhere posts the full board state (every column's card ids, in
-// order) to persist it.
+// The status board: one Sortable list per lane (To-do/Doing/Done), all in
+// the same group so cards can be dragged between statuses. Any drop
+// anywhere posts the full board state (every lane's card ids, in order)
+// to persist it. The Recurring lane isn't part of this - it's a separate
+// list of templates, not task cards.
 export default class extends Controller {
-  static targets = ["column"]
+  static targets = ["lane"]
 
   connect() {
-    this.sortables = this.columnTargets.map((column) => new Sortable(column, {
-      group: "plan",
+    this.sortables = this.laneTargets.map((lane) => new Sortable(lane, {
+      group: "board",
       animation: 150,
       ghostClass: "opacity-40",
       dragClass: "shadow-lg",
@@ -29,9 +30,9 @@ export default class extends Controller {
   }
 
   #persist() {
-    const days = {}
-    this.columnTargets.forEach((column) => {
-      days[column.dataset.day] = Array.from(column.children).map((card) => card.dataset.taskId)
+    const statuses = {}
+    this.laneTargets.forEach((lane) => {
+      statuses[lane.dataset.status] = Array.from(lane.children).map((card) => card.dataset.taskId)
     })
 
     fetch(this.element.dataset.reorderUrl, {
@@ -41,7 +42,7 @@ export default class extends Controller {
         "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
         "Accept": "application/json",
       },
-      body: JSON.stringify({ days }),
+      body: JSON.stringify({ statuses }),
     })
   }
 }

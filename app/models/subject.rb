@@ -3,6 +3,7 @@ class Subject < ApplicationRecord
   belongs_to :user
   has_many :topics, -> { order(:position) }, dependent: :destroy
   has_many :tasks, dependent: :nullify
+  has_many :recurring_tasks, dependent: :nullify
 
   before_validation :assign_position, on: :create
 

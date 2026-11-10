@@ -4,7 +4,8 @@ read_chapter_three:
   subject: economics
   title: Read chapter 3
   status: pending
-  position: 0
+  calendar_position: 0
+  board_position: 0
 
 review_notes:
   user: two
@@ -12,4 +13,5 @@ review_notes:
   subject: history
   title: Review notes
   status: pending
-  position: 0
+  calendar_position: 0
+  board_position: 0

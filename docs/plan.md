@@ -23,20 +23,25 @@ Rule: don't start a phase until the previous one is used daily.
 
 ## Phase 1 – Planner and checklist (web)
 - [x] Subjects and topics (`/subjects`): add subjects, add topics under them, archive
-- [x] Day planner (`/plan`): Unscheduled pool + day columns (Sunsama-style, replaced the
-      Backlog/Next/Today/Done Kanban board), drag-and-drop via SortableJS to reschedule a
-      card onto a different day, subtask checklists, a per-day progress bar, and an
-      hour-by-hour timeline for today
-- [x] Delete a card with Undo (soft delete; the flash message carries a restore link)
-- [x] Export/import the whole plan (subjects, topics, tasks) as one JSON file (`/plan_template`),
-      for backup or reuse as a starting template; import only adds, never overwrites
-- [x] "Remove all plans": one button on `/plan` that clears every card (hard delete, confirmed)
+- [x] Board (`/board`): status lanes (To-do/Doing/Done), drag-and-drop via SortableJS to
+      change a card's status; a Recurring lane manages day-of-week templates
+- [x] Calendar (`/calendar`): a real week-view time grid, replacing the earlier day-column
+      `/plan` page. Cards with a time are positioned blocks you drag to move (day/time) or
+      resize (duration); an Unscheduled sidebar holds everything without a time, dragged
+      onto the grid to schedule it. Pointer Events (not SortableJS) so it works the same
+      with touch and mouse. Board and Calendar are two views of the same `Task` - status
+      and scheduling are independent axes, each with its own position column
+      (`board_position` / `calendar_position`)
+- [x] Recurring tasks: a template (title, days of week) generates today's `Task` instance
+      lazily the first time the Board or Calendar loads that day - no scheduled job
+- [x] Subtask checklists, delete with Undo (soft delete), "Remove all cards" (hard delete,
+      confirmed), export/import the whole plan as one JSON file (`/plan_template`)
 - [x] Every page shares one standard width (`max-w-7xl`); single-column pages (Today, Settings,
       Devices) keep an inner `max-w-2xl` so their content doesn't stretch edge to edge
 - [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
-- [ ] Plan timeline, Lock, plan API for the phone — next (P3)
+- [ ] Lock a day's plan, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)
-- [ ] Recurring tasks
+- [ ] Google/Outlook calendar sync (pull their events onto the grid; two-way later)
 - [x] Each model scoped to the user, with a cross-user access test
 
 ## Phase 2 – Focus and check-ins (web)

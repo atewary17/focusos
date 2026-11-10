@@ -1,16 +1,20 @@
-# A plan card. `scheduled_on` is nil for the Unscheduled pool, or a date for
-# one of the day columns; `starts_at` is an optional specific time within
-# that day, shown on the card and used to place it on the timeline.
+# A plan card, usable from two independent views:
+#   - the Board (status lanes: pending/doing/done), ordered by board_position
+#   - the Calendar (scheduled_on + starts_at), ordered by calendar_position
+# A card can be in both at once (e.g. "doing" and scheduled for 2pm) since
+# status and scheduling are unrelated axes.
 class Task < ApplicationRecord
-  STATUSES = %w[pending done skipped].freeze
+  STATUSES = %w[pending doing done skipped].freeze
   ENERGIES = %w[high low].freeze
 
   belongs_to :user
   belongs_to :topic, optional: true
   belongs_to :subject, optional: true
   belongs_to :carried_from, class_name: "Task", optional: true
+  belongs_to :recurring_task, optional: true
 
-  before_validation :assign_position, on: :create
+  before_validation :assign_calendar_position, on: :create
+  before_validation :assign_board_position, on: :create
   before_validation :inherit_subject_from_topic
   before_validation :align_starts_at_with_scheduled_on
 
@@ -23,20 +27,24 @@ class Task < ApplicationRecord
   validate :topic_belongs_to_user
   validate :subject_belongs_to_user
 
-  scope :unscheduled, -> { where(scheduled_on: nil).order(:position) }
-  scope :scheduled_on_date, ->(date) { where(scheduled_on: date).order(:position) }
   scope :kept, -> { where(deleted_at: nil) }
 
-  # Moves every card into the given day (or the Unscheduled pool) and
-  # position, in one transaction. `days` is { "unscheduled" | "2026-11-10" => [id, …] };
-  # ids outside the caller's own tasks are silently skipped by the `user.tasks` scope.
-  def self.reorder_board!(user, days)
+  # Moves every card into the given status lane and board position, in one
+  # transaction. `statuses` is { "pending" | "doing" | "done" => [id, …] }.
+  def self.reorder_board!(user, statuses)
     transaction do
-      days.each do |key, ids|
-        date = key == "unscheduled" ? nil : Date.iso8601(key)
-        ids.each_with_index { |id, index| user.tasks.where(id: id).update_all(scheduled_on: date, position: index) }
+      statuses.each do |status, ids|
+        ids.each_with_index { |id, index| user.tasks.where(id: id).update_all(status: status, board_position: index) }
       end
     end
+  end
+
+  # Moves one card to a specific day and time (or clears scheduling if
+  # `date` is nil), keeping it last in that day's calendar order.
+  def reschedule!(date, time_of_day = nil)
+    new_position = date ? (user.tasks.where(scheduled_on: date).maximum(:calendar_position) || -1) + 1 : 0
+    update!(scheduled_on: date, starts_at: date && time_of_day ? Time.zone.local(date.year, date.month, date.day, time_of_day.hour, time_of_day.min) : nil,
+            calendar_position: new_position)
   end
 
   def toggle_done!
@@ -70,8 +78,12 @@ class Task < ApplicationRecord
   end
 
   private
-    def assign_position
-      self.position = (user&.tasks&.where(scheduled_on: scheduled_on)&.maximum(:position) || -1) + 1
+    def assign_calendar_position
+      self.calendar_position = (user&.tasks&.where(scheduled_on: scheduled_on)&.maximum(:calendar_position) || -1) + 1
+    end
+
+    def assign_board_position
+      self.board_position = (user&.tasks&.where(status: status)&.maximum(:board_position) || -1) + 1
     end
 
     def inherit_subject_from_topic

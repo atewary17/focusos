@@ -5,6 +5,7 @@ class Topic < ApplicationRecord
   belongs_to :user
   belongs_to :subject
   has_many :tasks, dependent: :nullify
+  has_many :recurring_tasks, dependent: :nullify
 
   before_validation :assign_position, on: :create
   before_validation :copy_user_from_subject, on: :create
