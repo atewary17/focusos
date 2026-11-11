@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "exported_at": "2026-11-10T12:00:00Z",
+  "subjects": [
+    {
+      "name": "Imported Subject",
+      "color": "#2563eb",
+      "weekly_target_minutes": 120,
+      "topics": [
+        {
+          "name": "Imported Topic",
+          "estimated_minutes": 60,
+          "tasks": [
+            {
+              "title": "Imported Task",
+              "notes": "from a fixture",
+              "priority": 2,
+              "estimate_minutes": 30,
+              "energy": "high",
+              "due_on": null,
+              "scheduled_on": null,
+              "starts_time": null,
+              "subtasks": [ { "text": "Step one", "done": true } ]
+            }
+          ]
+        }
+      ],
+      "tasks": []
+    }
+  ],
+  "unscheduled_tasks": []
+}

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
     t.datetime "updated_at", null: false
     t.index ["device_id"], name: "index_health_samples_on_device_id"
     t.index ["user_id", "kind", "recorded_at", "source_package"], name: "index_health_samples_uniqueness", unique: true
+  end
+
+  create_table "recurring_tasks", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "topic_id"
+    t.bigint "subject_id"
+    t.string "title", null: false
+    t.integer "estimate_minutes"
+    t.integer "priority"
+    t.string "energy"
+    t.integer "days_of_week", default: [], null: false, array: true
+    t.boolean "active", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_id"], name: "index_recurring_tasks_on_subject_id"
+    t.index ["topic_id"], name: "index_recurring_tasks_on_topic_id"
+    t.index ["user_id"], name: "index_recurring_tasks_on_user_id"
   end
 
   create_table "screen_events", force: :cascade do |t|
@@ -290,6 +308,62 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "subjects", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.string "color", default: "#0f766e", null: false
+    t.integer "weekly_target_minutes"
+    t.integer "position", default: 0, null: false
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "position"], name: "index_subjects_on_user_id_and_position"
+  end
+
+  create_table "tasks", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "topic_id"
+    t.bigint "subject_id"
+    t.string "title", null: false
+    t.text "notes"
+    t.integer "calendar_position", default: 0, null: false
+    t.integer "priority"
+    t.date "due_on"
+    t.integer "estimate_minutes"
+    t.string "energy"
+    t.string "status", default: "pending", null: false
+    t.datetime "completed_at"
+    t.bigint "carried_from_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.date "scheduled_on"
+    t.datetime "starts_at"
+    t.jsonb "subtasks", default: [], null: false
+    t.datetime "deleted_at"
+    t.integer "board_position", default: 0, null: false
+    t.bigint "recurring_task_id"
+    t.index ["recurring_task_id", "scheduled_on"], name: "index_tasks_on_recurring_task_id_and_scheduled_on", unique: true
+    t.index ["recurring_task_id"], name: "index_tasks_on_recurring_task_id"
+    t.index ["subject_id"], name: "index_tasks_on_subject_id"
+    t.index ["topic_id"], name: "index_tasks_on_topic_id"
+    t.index ["user_id", "deleted_at"], name: "index_tasks_on_user_id_and_deleted_at"
+    t.index ["user_id", "scheduled_on", "calendar_position"], name: "index_tasks_on_user_id_and_scheduled_on_and_calendar_position"
+    t.index ["user_id", "status", "board_position"], name: "index_tasks_on_user_id_and_status_and_board_position"
+  end
+
+  create_table "topics", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "subject_id", null: false
+    t.string "name", null: false
+    t.string "status", default: "not_started", null: false
+    t.integer "estimated_minutes"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_id", "position"], name: "index_topics_on_subject_id_and_position"
+    t.index ["user_id"], name: "index_topics_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
@@ -312,6 +386,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
   add_foreign_key "devices", "users"
   add_foreign_key "health_samples", "devices"
   add_foreign_key "health_samples", "users"
+  add_foreign_key "recurring_tasks", "subjects"
+  add_foreign_key "recurring_tasks", "topics"
+  add_foreign_key "recurring_tasks", "users"
   add_foreign_key "screen_events", "devices"
   add_foreign_key "screen_events", "users"
   add_foreign_key "sessions", "users"
@@ -325,4 +402,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_065224) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "subjects", "users"
+  add_foreign_key "tasks", "recurring_tasks"
+  add_foreign_key "tasks", "subjects"
+  add_foreign_key "tasks", "tasks", column: "carried_from_id"
+  add_foreign_key "tasks", "topics"
+  add_foreign_key "tasks", "users"
+  add_foreign_key "topics", "subjects"
+  add_foreign_key "topics", "users"
 end

@@ -9,6 +9,32 @@ Rails.application.routes.draw do
   root "today#show"
   resource :dashboard, only: :show
   resource :phone, only: :show, controller: "phone"
+  resource :board, only: :show, controller: "board"
+  resource :calendar, only: :show, controller: "calendar"
+  resource :plan_template, only: %i[show create], controller: "plan_templates"
+
+  resources :subjects, except: %i[show new edit] do
+    resources :topics, only: :create
+  end
+  resources :topics, only: %i[update destroy]
+  resources :recurring_tasks, except: %i[show new edit] do
+    member { patch :toggle }
+  end
+  resources :tasks, except: %i[show new edit] do
+    collection do
+      patch :reorder
+      patch :reorder_status
+      delete :destroy_all
+    end
+    member do
+      patch :toggle
+      patch :restore
+      patch :reschedule
+    end
+    resources :subtasks, only: :create, controller: "task_subtasks"
+    patch "subtasks/:subtask_id/toggle", to: "task_subtasks#toggle", as: :toggle_task_subtask
+    delete "subtasks/:subtask_id", to: "task_subtasks#destroy", as: :task_subtask
+  end
   namespace :settings do
     resources :devices, only: %i[index destroy]
   end

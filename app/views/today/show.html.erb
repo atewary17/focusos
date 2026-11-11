@@ -1,5 +1,6 @@
 <% content_for :title, "Today" %>
 
+<div class="mx-auto max-w-2xl">
 <section class="mb-8">
   <p class="text-sm font-medium text-teal-700"><%= @now.strftime("%A, %-d %B") %> · Day <%= @day_number %></p>
   <h1 class="mt-1 text-3xl font-semibold tracking-tight">
@@ -28,3 +29,4 @@
     <li class="flex gap-2"><span class="text-stone-400">4.</span> Phone, laptop and watch data in one daily report</li>
   </ul>
 </section>
+</div>

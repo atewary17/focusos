@@ -1,5 +1,6 @@
 <% content_for :title, "Devices" %>
 
+<div class="mx-auto max-w-2xl">
 <p class="mb-2 text-sm"><%= link_to "← Settings", account_path, class: "text-stone-500 hover:text-stone-800" %></p>
 <h1 class="mb-2 text-2xl font-semibold tracking-tight">Devices</h1>
 <p class="mb-8 text-sm text-stone-500">Phones signed in to the FocusOS Android app.</p>
@@ -33,4 +34,5 @@
       <%= render "shared/device_status", device: device %>
     </section>
   <% end %>
+</div>
 </div>

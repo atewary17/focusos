@@ -22,12 +22,30 @@ Rule: don't start a phase until the previous one is used daily.
 - [x] Dashboard with charts on collector data
 
 ## Phase 1 – Planner and checklist (web)
-- [ ] Subjects and topics
-- [ ] Tasks: priority, due date, planned minutes, status
-- [ ] Day plan: place tasks into time slots
+- [x] Subjects and topics (`/subjects`): add subjects, add topics under them, archive
+- [x] Board (`/board`): status lanes (To-do/Doing/Done), drag-and-drop via SortableJS to
+      change a card's status; a Recurring lane manages day-of-week templates
+- [x] Calendar (`/calendar`): a real week-view time grid, replacing the earlier day-column
+      `/plan` page. Cards with a time are positioned blocks you drag to move (day/time) or
+      resize (duration); an Unscheduled sidebar holds everything without a time, dragged
+      onto the grid to schedule it. Pointer Events (not SortableJS) so it works the same
+      with touch and mouse. Board and Calendar are two views of the same `Task` - status
+      and scheduling are independent axes, each with its own position column
+      (`board_position` / `calendar_position`). Click empty grid space to add a card
+      right there; overlapping events lay out side by side instead of hiding behind
+      each other; a live line marks "now" on today's column; dragging highlights the
+      target day and shows a floating time/duration tooltip
+- [x] Recurring tasks: a template (title, days of week) generates today's `Task` instance
+      lazily the first time the Board or Calendar loads that day - no scheduled job
+- [x] Subtask checklists, delete with Undo (soft delete), "Remove all cards" (hard delete,
+      confirmed), export/import the whole plan as one JSON file (`/plan_template`)
+- [x] Every page shares one standard width (`max-w-7xl`); single-column pages (Today, Settings,
+      Devices) keep an inner `max-w-2xl` so their content doesn't stretch edge to edge
+- [ ] Day templates (fixed structure: wake, bed, meals, focus blocks) — next (P2)
+- [ ] Lock a day's plan, plan API for the phone — next (P3)
 - [ ] Morning carry-forward of unfinished tasks (user confirms)
-- [ ] Recurring tasks
-- [ ] Each model scoped to the user, with a cross-user access test
+- [ ] Google/Outlook calendar sync (pull their events onto the grid; two-way later)
+- [x] Each model scoped to the user, with a cross-user access test
 
 ## Phase 2 – Focus and check-ins (web)
 - [ ] Focus timer (survives page reload), linked to a task

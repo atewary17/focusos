@@ -1,0 +1,11 @@
+economics:
+  user: one
+  name: Economics
+  color: "#0f766e"
+  position: 0
+
+history:
+  user: two
+  name: History
+  color: "#7c3aed"
+  position: 0
