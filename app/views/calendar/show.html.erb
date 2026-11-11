@@ -29,9 +29,10 @@
   </section>
 <% end %>
 
-<div data-controller="calendar" data-calendar-start-hour-value="<%= @start_hour %>"
+<div data-controller="calendar" data-calendar-start-hour-value="<%= @start_hour %>" data-calendar-end-hour-value="<%= @end_hour %>"
      data-calendar-reschedule-url-template-value="<%= reschedule_task_path(0) %>"
      data-calendar-update-url-template-value="<%= task_path(0) %>"
+     data-calendar-create-url-value="<%= tasks_path %>"
      class="flex gap-4">
   <aside class="w-56 shrink-0">
     <h2 class="mb-2 flex items-center justify-between text-sm font-semibold text-stone-700">
@@ -62,11 +63,13 @@
           <p class="text-xs font-semibold text-stone-700"><%= date.strftime("%a") %></p>
           <p class="text-[11px] <%= date == Date.current ? "font-semibold text-teal-700" : "text-stone-400" %>"><%= date.day %></p>
         </div>
-        <div data-calendar-target="day" data-date="<%= date.iso8601 %>" class="relative" style="height: <%= grid_height %>px">
+        <div data-calendar-target="day" data-date="<%= date.iso8601 %>" data-today="<%= date == Date.current %>"
+             class="relative cursor-pointer" style="height: <%= grid_height %>px">
           <% (@start_hour..@end_hour).each do |hour| %>
-            <div class="absolute inset-x-0 border-t border-stone-100" style="top: <%= (hour - @start_hour) * 60 %>px"></div>
+            <div class="pointer-events-none absolute inset-x-0 border-t border-stone-100" style="top: <%= (hour - @start_hour) * 60 %>px"></div>
           <% end %>
-          <%= render partial: "tasks/event", collection: @scheduled_by_day[date], as: :task, locals: { start_hour: @start_hour } %>
+          <%= render partial: "tasks/event", collection: @scheduled_by_day[date], as: :task,
+                locals: { start_hour: @start_hour, columns_by_task_id: @columns_by_task_id } %>
         </div>
       </div>
     <% end %>

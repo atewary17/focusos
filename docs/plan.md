@@ -31,7 +31,10 @@ Rule: don't start a phase until the previous one is used daily.
       onto the grid to schedule it. Pointer Events (not SortableJS) so it works the same
       with touch and mouse. Board and Calendar are two views of the same `Task` - status
       and scheduling are independent axes, each with its own position column
-      (`board_position` / `calendar_position`)
+      (`board_position` / `calendar_position`). Click empty grid space to add a card
+      right there; overlapping events lay out side by side instead of hiding behind
+      each other; a live line marks "now" on today's column; dragging highlights the
+      target day and shows a floating time/duration tooltip
 - [x] Recurring tasks: a template (title, days of week) generates today's `Task` instance
       lazily the first time the Board or Calendar loads that day - no scheduled job
 - [x] Subtask checklists, delete with Undo (soft delete), "Remove all cards" (hard delete,
